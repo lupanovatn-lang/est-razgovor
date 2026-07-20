@@ -30,8 +30,7 @@ button { color: inherit; }
 
 .brand-copy b,
 .plan-header h1,
-.empty-plan h1,
-.generating-status {
+.saved-page-header h1 {
   font-family: var(--font-display);
   letter-spacing: -.02em;
   font-feature-settings: "kern" on;
@@ -153,8 +152,15 @@ button { color: inherit; }
 
 .settings-panel { display: flex; flex-direction: column; min-height: 0; background: #f1f2fd; border-right: 1px solid #e5e6f3; }
 .settings-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 22px 20px 16px; }
-.settings-panel h2 { margin: 0 0 6px; font-size: 18px; letter-spacing: -.02em; }
-.settings-lead { margin: 0 0 18px; color: #7c8099; font-size: 12px; line-height: 1.45; }
+.settings-panel h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -.015em;
+  line-height: 1.25;
+  color: #1f2133;
+}
+.settings-lead { margin: 0 0 20px; color: #7c8099; font-size: 13px; line-height: 1.5; }
 .field-label { display: block; margin: 14px 0 7px; color: #3f435a; font-size: 12px; font-weight: 600; }
 .settings-input, .select-wrap select { width: 100%; border: 1px solid #e0e2ef; background: #fbfbff; border-radius: 11px; outline: none; color: var(--ink); }
 .settings-input { padding: 11px 12px; resize: vertical; line-height: 1.45; font-size: 13px; }
@@ -174,8 +180,24 @@ button { color: inherit; }
 
 .empty-plan { width: min(460px, 100%); margin: 12vh auto 0; text-align: center; }
 .empty-plan-icon { display: grid; place-items: center; margin: 0 auto 18px; width: 84px; height: 84px; border-radius: 22px; background: #eef0ff; }
-.empty-plan h1 { margin: 0 0 10px; font-size: 26px; letter-spacing: -.025em; line-height: 1.2; }
+.empty-plan h1 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.25;
+  font-family: var(--font-sans);
+}
 .empty-plan p { margin: 0; color: #7c8099; font-size: 14px; line-height: 1.55; }
+.generating-status {
+  margin: 0 0 18px;
+  color: #2f3144;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -.015em;
+  line-height: 1.35;
+  font-family: var(--font-sans);
+}
 
 .generating-progress {
   width: min(360px, 92%);
