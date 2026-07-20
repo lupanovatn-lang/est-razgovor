@@ -612,14 +612,29 @@ export default function Home() {
           <button type="button" className="text-action" onClick={copyPlan}>
             {copied ? "Скопировано" : "Копировать"}
           </button>
+        </div>
+
+        <aside className="rehearse-invite">
+          <div className="rehearse-invite-copy">
+            <h2>Потренируйте разговор</h2>
+            <p>
+              Проиграйте первые фразы с ИИ: увидите возможные ответы ребёнка и сможете
+              спокойно подправить тон до настоящего разговора.
+            </p>
+            <ul className="rehearse-invite-points">
+              <li>Типичные реакции ребёнка</li>
+              <li>Фразы из вашего плана</li>
+              <li>Короткие подсказки по ходу</li>
+            </ul>
+          </div>
           <button
             type="button"
             className="rehearse-button"
             onClick={() => void startRehearsal()}
           >
-            Потренироваться
+            Начать репетицию
           </button>
-        </div>
+        </aside>
       </section>
     );
   }
