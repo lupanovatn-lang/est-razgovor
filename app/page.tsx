@@ -878,7 +878,7 @@ export default function Home() {
           </main>
           <footer>
             <p>ИИ может ошибаться. В кризисной ситуации обратитесь к специалисту.</p>
-            <div>Конфиденциальность</div>
+            <div>Конфиденциально</div>
           </footer>
         </section>
       </div>
