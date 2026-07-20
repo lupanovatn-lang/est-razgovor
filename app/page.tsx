@@ -400,9 +400,9 @@ export default function Home() {
     setTryPhrase("");
   };
 
-  const sendReply = async () => {
-    if (!reply.trim() || !plan || rehearseLoading) return;
-    const parentText = reply.trim();
+  const sendReply = async (preset?: string) => {
+    const parentText = (preset ?? reply).trim();
+    if (!parentText || !plan || rehearseLoading) return;
     setReply("");
     const nextHistory: ChatMessage[] = [...messages, { role: "parent", text: parentText }];
     setMessages(nextHistory);
@@ -439,10 +439,7 @@ export default function Home() {
       const nextActive = Number.isFinite(parsed)
         ? Math.min(stepCount, Math.max(1, Math.round(parsed)))
         : (coachActiveStep ?? 1);
-      // Checklist only advances forward with the conversation.
-      setCoachActiveStep((prev) =>
-        Math.max(prev ?? 1, nextActive),
-      );
+      setCoachActiveStep((prev) => Math.max(prev ?? 1, nextActive));
       setTryPhrase(data.tryPhrase || "");
     } catch (e) {
       setRehearseError(e instanceof Error ? e.message : "Ошибка репетиции");
@@ -907,6 +904,20 @@ export default function Home() {
   }
 
   function Rehearsal() {
+    const steps = plan?.steps ?? [];
+    const total = steps.length;
+    const focusIndex = Math.min(
+      total - 1,
+      Math.max(0, (coachActiveStep ?? 1) - 1),
+    );
+    const focusStep = total > 0 ? steps[focusIndex] : undefined;
+    const tipPhrase =
+      tryPhrase ||
+      (messages.length === 0 ? focusStep?.phrase || "" : "") ||
+      "";
+    const tipText = coachTip.trim();
+    const avoid = focusStep?.avoid?.trim() || "";
+
     return (
       <section className="rehearsal-wrap">
         <div className="rehearsal-grid">
@@ -930,7 +941,11 @@ export default function Home() {
             <div className="messages">
               {messages.length === 0 && !rehearseLoading && (
                 <div className="messages-empty">
-                  Напишите первую фразу в чат. Подсказка и пример — в блоке «Ваш ход».
+                  <p className="messages-empty-kicker">Репетиция</p>
+                  <p>
+                    Здесь отвечает ИИ в роли ребёнка. Начните своими словами или
+                    скажите готовую фразу справа.
+                  </p>
                 </div>
               )}
               {messages.map((m, i) => (
@@ -953,7 +968,7 @@ export default function Home() {
             <div className="composer">
               <textarea
                 rows={2}
-                placeholder="Начните разговор своими словами…"
+                placeholder="Ваша реплика…"
                 value={reply}
                 disabled={rehearseLoading}
                 onChange={(e) => setReply(e.target.value)}
@@ -972,87 +987,77 @@ export default function Home() {
                 ↑
               </button>
             </div>
-            <div className="composer-note">Enter — отправить · Здесь нет идеальных ответов</div>
+            <div className="composer-note">Enter — отправить · Можно ошибаться</div>
           </div>
+
           <aside className="coach-card">
-            {(() => {
-              const steps = plan?.steps ?? [];
-              const total = steps.length;
-              const focusIndex = Math.min(
-                total - 1,
-                Math.max(0, (coachActiveStep ?? 1) - 1),
-              );
-              const focusStep = total > 0 ? steps[focusIndex] : undefined;
-              const tipText =
-                coachTip ||
-                (messages.length === 0
-                  ? "Напишите в чат своими словами или нажмите «В чат»"
-                  : "");
-              const tipPhrase =
-                tryPhrase ||
-                (messages.length === 0 ? focusStep?.phrase || "" : "") ||
-                "";
-              const avoid = focusStep?.avoid?.trim() || "";
+            <div className="coach-title">
+              <div>
+                <b>Подсказка тренера</b>
+                <small>
+                  Шаг {total ? focusIndex + 1 : 0} из {total}
+                </small>
+              </div>
+            </div>
 
-              return (
-                <>
-                  <div className="coach-title">
-                    <div>
-                      <b>Тренажёр</b>
-                      <small>
-                        Шаг {total ? focusIndex + 1 : 0} из {total}
-                      </small>
-                    </div>
+            {total > 0 ? (
+              <ol className="coach-dots" aria-label="Прогресс по плану">
+                {steps.map((step, i) => {
+                  const done = i < focusIndex;
+                  const current = i === focusIndex;
+                  return (
+                    <li
+                      key={`${step.title}-${i}`}
+                      className={[
+                        "coach-dot",
+                        done ? "done" : "",
+                        current ? "current" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      title={step.title}
+                    >
+                      <span>{done ? "✓" : i + 1}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : null}
+
+            {focusStep ? (
+              <div className="coach-now">
+                <p className="coach-now-title">{focusStep.title}</p>
+                {tipText ? <p className="coach-now-tip">{tipText}</p> : null}
+
+                {tipPhrase ? (
+                  <div className="coach-say">
+                    <p>«{tipPhrase}»</p>
+                    <button
+                      type="button"
+                      className="coach-say-btn"
+                      disabled={rehearseLoading}
+                      onClick={() => void sendReply(tipPhrase)}
+                    >
+                      Сказать это
+                    </button>
+                    <button
+                      type="button"
+                      className="coach-say-edit"
+                      disabled={rehearseLoading}
+                      onClick={() => setReply(tipPhrase)}
+                    >
+                      Подправить в чате
+                    </button>
                   </div>
+                ) : (
+                  <p className="coach-now-tip">
+                    Напишите реплику своими словами в чате.
+                  </p>
+                )}
 
-                  {focusStep ? (
-                    <div className="coach-now">
-                      <div className="coach-now-top">
-                        <span>Ваш ход</span>
-                      </div>
-                      <p className="coach-now-title">{focusStep.title}</p>
-                      {tipText ? <p className="coach-now-tip">{tipText}</p> : null}
-                      {tipPhrase ? (
-                        <button
-                          type="button"
-                          className="coach-now-phrase"
-                          disabled={rehearseLoading}
-                          onClick={() => setReply(tipPhrase)}
-                        >
-                          <span>«{tipPhrase}»</span>
-                          <em>В чат</em>
-                        </button>
-                      ) : null}
-                      {avoid ? <p className="coach-avoid">Не: {avoid}</p> : null}
-                    </div>
-                  ) : null}
-
-                  {total > 0 ? (
-                    <ol className="coach-dots" aria-label="Прогресс по плану">
-                      {steps.map((step, i) => {
-                        const done = i < focusIndex;
-                        const current = i === focusIndex;
-                        return (
-                          <li
-                            key={`${step.title}-${i}`}
-                            className={[
-                              "coach-dot",
-                              done ? "done" : "",
-                              current ? "current" : "",
-                            ]
-                              .filter(Boolean)
-                              .join(" ")}
-                            title={step.title}
-                          >
-                            <span>{done ? "✓" : i + 1}</span>
-                          </li>
-                        );
-                      })}
-                    </ol>
-                  ) : null}
-                </>
-              );
-            })()}
+                {avoid ? <p className="coach-avoid">Лучше не: {avoid}</p> : null}
+              </div>
+            ) : null}
           </aside>
         </div>
       </section>
