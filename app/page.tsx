@@ -466,7 +466,7 @@ export default function Home() {
 
           <fieldset className="settings-fields" disabled={paramsLocked}>
           <label className="field-label" htmlFor="topic">
-            Тема <span className="field-req">*</span>
+            Тема <span className="field-req">обяз.</span>
           </label>
           <div className="select-wrap">
             <select
@@ -487,7 +487,7 @@ export default function Home() {
           </div>
 
           <label className="field-label" htmlFor="situation">
-            Что случилось? <span className="field-req">*</span>
+            Что случилось? <span className="field-req">обяз.</span>
           </label>
           <textarea
             id="situation"
@@ -512,7 +512,7 @@ export default function Home() {
           )}
 
           <label className="field-label" htmlFor="goalKind">
-            Цель разговора <span className="field-req">*</span>
+            Цель разговора <span className="field-req">обяз.</span>
           </label>
           <div className="select-wrap">
             <select
@@ -549,7 +549,7 @@ export default function Home() {
           <div className="settings-row">
             <div>
               <label className="field-label" htmlFor="age">
-                Возраст <span className="field-req">*</span>
+                Возраст <span className="field-req">обяз.</span>
               </label>
               <div className="age-row compact">
                 <input
@@ -577,7 +577,7 @@ export default function Home() {
           </div>
 
           <label className="field-label" htmlFor="reaction">
-            Как обычно реагирует <span className="field-req">*</span>
+            Как обычно реагирует <span className="field-req">обяз.</span>
           </label>
           <div className="select-wrap">
             <select
@@ -624,7 +624,7 @@ export default function Home() {
           <p className="settings-privacy">
             {paramsLocked
               ? "Сначала подтвердите изменение, потом сможете обновить план"
-              : "Поля со звёздочкой обязательны · описание только для плана"}
+              : "Поля с меткой «обяз.» нужно заполнить"}
           </p>
         </div>
       </aside>
