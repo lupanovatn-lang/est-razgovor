@@ -617,6 +617,26 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   font-size: 12px;
   line-height: 1.45;
 }
+.coach-checklist-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+.coach-checklist-head > span:first-child {
+  color: #8a8eaa;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.coach-checklist-progress {
+  color: #655aef;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 .coach-steps-label {
   margin: 0 0 8px;
   color: #8a8eaa;
@@ -663,7 +683,13 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 }
 .coach-live p { margin: 6px 0 0; color: #42455e; font-size: 12px; line-height: 1.5; }
 .coach-live-note { margin-top: 8px !important; color: #6d718a !important; }
-.coach-live .text-action { margin-top: 8px; margin-right: 12px; padding: 0; font-size: 12px; }
+.coach-live-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 8px;
+}
+.coach-live .text-action { margin: 0; padding: 0; font-size: 12px; }
 .coach-steps { display: grid; gap: 6px; }
 .coach-step {
   border: 1px solid #e5e6f3;
@@ -676,9 +702,26 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   background: #fbfbff;
   box-shadow: 0 0 0 3px rgba(98, 87, 233, .06);
 }
-.coach-step.current:not(.open) {
+.coach-step.current:not(.open):not(.done) {
   border-color: #c8c4f4;
   background: #f7f7fd;
+}
+.coach-step.done {
+  border-color: #d7e8dc;
+  background: #f7fbf8;
+}
+.coach-step.done .coach-step-head b {
+  color: #6a7a70;
+  text-decoration: line-through;
+  text-decoration-color: #b7c9bd;
+}
+.coach-step.done .coach-step-num {
+  background: #e4f0e8;
+  color: #3f7a55;
+}
+.coach-step.done .coach-step-toggle {
+  color: #3f7a55;
+  font-weight: 700;
 }
 .coach-step.current .coach-step-num {
   background: #e7e4ff;
@@ -687,6 +730,46 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .coach-step.current .coach-step-toggle {
   color: #655aef;
   font-weight: 700;
+}
+.coach-step-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: stretch;
+}
+.coach-check {
+  width: 40px;
+  margin: 0;
+  border: 0;
+  border-right: 1px solid #ececf5;
+  background: transparent;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+.coach-check::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid #c5c8db;
+  background: #fff;
+  box-sizing: border-box;
+}
+.coach-check.done::before {
+  display: none;
+}
+.coach-check.done {
+  background: #eaf5ee;
+}
+.coach-check.done svg {
+  width: 18px;
+  height: 18px;
+  padding: 3px;
+  border-radius: 5px;
+  background: #3f7a55;
+  box-sizing: border-box;
 }
 .coach-step-head {
   width: 100%;
@@ -699,6 +782,26 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   padding: 10px 12px;
   text-align: left;
   cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.coach-mark-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border: 1px solid #d5d8ea;
+  border-radius: 9px;
+  background: #fff;
+  color: #5045ce;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.coach-mark-btn:hover { background: #f5f5fc; }
+.coach-mark-btn.done {
+  border-color: #c9dfd1;
+  background: #f2f8f4;
+  color: #3f7a55;
 }
 .coach-step-num {
   width: 28px;
@@ -727,7 +830,9 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .coach-step-body {
   display: grid;
   gap: 10px;
-  padding: 0 12px 12px 50px;
+  padding: 0 12px 12px 52px;
+  border-top: 1px solid #ececf5;
+  padding-top: 12px;
 }
 .coach-step-body > p {
   margin: 0;

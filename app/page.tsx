@@ -122,6 +122,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
   const [openCoachStep, setOpenCoachStep] = useState(-1);
+  const [doneCoachSteps, setDoneCoachSteps] = useState<number[]>([]);
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -189,6 +190,9 @@ export default function Home() {
     setMessages([]);
     setReply("");
     setCoachTip("");
+    setCoachActiveStep(null);
+    setDoneCoachSteps([]);
+    setOpenCoachStep(-1);
     setTryPhrase("");
     setSignals([]);
     setFeedback("");
@@ -380,10 +384,17 @@ export default function Home() {
     setRehearseLoading(false);
     setCoachTip("");
     setCoachActiveStep(null);
+    setDoneCoachSteps([]);
     setTryPhrase("");
     setSignals([]);
     setFeedback("");
     setOpenCoachStep(-1);
+  };
+
+  const toggleCoachStepDone = (index: number) => {
+    setDoneCoachSteps((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
+    );
   };
 
   const sendReply = async () => {
@@ -938,13 +949,13 @@ export default function Home() {
               <span>✦</span>
               <div>
                 <b>Задание по плану</b>
-                <small>Структура шагов — опирайтесь на неё в диалоге</small>
+                <small>Отмечайте шаги по мере разговора</small>
               </div>
             </div>
 
             <p className="coach-brief">
-              Шаги — каркас разговора (закрыты, откройте «Помощь» при необходимости).
-              Подсказка по ходу говорит, к какому шагу идти прямо сейчас.
+              Это чеклист разговора: отметьте шаг, когда прошли его. Подсказки и
+              фразы — по кнопке «Помощь».
             </p>
 
             {coachTip && messages.length > 0 && (
@@ -960,34 +971,58 @@ export default function Home() {
                   </p>
                 )}
                 <p>{coachTip}</p>
-                {tryPhrase && (
-                  <button
-                    type="button"
-                    className="text-action"
-                    disabled={rehearseLoading}
-                    onClick={() => setReply(tryPhrase)}
-                  >
-                    Вставить фразу
-                  </button>
-                )}
-                {coachActiveStep != null && (
-                  <button
-                    type="button"
-                    className="text-action"
-                    onClick={() => setOpenCoachStep(coachActiveStep - 1)}
-                  >
-                    Открыть шаг {coachActiveStep}
-                  </button>
-                )}
+                <div className="coach-live-actions">
+                  {tryPhrase && (
+                    <button
+                      type="button"
+                      className="text-action"
+                      disabled={rehearseLoading}
+                      onClick={() => setReply(tryPhrase)}
+                    >
+                      Вставить фразу
+                    </button>
+                  )}
+                  {coachActiveStep != null && (
+                    <button
+                      type="button"
+                      className="text-action"
+                      onClick={() => setOpenCoachStep(coachActiveStep - 1)}
+                    >
+                      Открыть шаг
+                    </button>
+                  )}
+                  {coachActiveStep != null &&
+                    !doneCoachSteps.includes(coachActiveStep - 1) && (
+                      <button
+                        type="button"
+                        className="text-action"
+                        onClick={() => toggleCoachStepDone(coachActiveStep - 1)}
+                      >
+                        Шаг сделан
+                      </button>
+                    )}
+                </div>
                 {feedback && <p className="coach-live-note">{feedback}</p>}
               </div>
             )}
 
-            <div className="coach-steps-label">Шаги плана</div>
+            {(() => {
+              const total = plan?.steps.length ?? 0;
+              const doneCount = doneCoachSteps.filter((i) => i >= 0 && i < total).length;
+              return (
+                <div className="coach-checklist-head">
+                  <span>Чеклист шагов</span>
+                  <span className="coach-checklist-progress">
+                    {doneCount} из {total} сделано
+                  </span>
+                </div>
+              );
+            })()}
             <div className="coach-steps">
               {(plan?.steps ?? []).map((step, i) => {
                 const open = openCoachStep === i;
-                const current = coachActiveStep === i + 1;
+                const done = doneCoachSteps.includes(i);
+                const current = !done && coachActiveStep === i + 1;
                 const hasHints =
                   !!step.action ||
                   !!step.why ||
@@ -1000,23 +1035,57 @@ export default function Home() {
                     className={[
                       "coach-step",
                       open ? "open" : "",
+                      done ? "done" : "",
                       current ? "current" : "",
                     ]
                       .filter(Boolean)
                       .join(" ")}
                   >
-                    <button
-                      type="button"
-                      className="coach-step-head"
-                      aria-expanded={open}
-                      onClick={() => setOpenCoachStep(open ? -1 : i)}
-                    >
-                      <span className="coach-step-num">{i + 1}</span>
-                      <b>{step.title}</b>
-                      <span className="coach-step-toggle">
-                        {open ? "Свернуть" : current ? "Сейчас" : hasHints ? "Помощь" : ""}
-                      </span>
-                    </button>
+                    <div className="coach-step-row">
+                      <button
+                        type="button"
+                        className={done ? "coach-check done" : "coach-check"}
+                        aria-pressed={done}
+                        aria-label={
+                          done
+                            ? `Шаг ${i + 1} сделан — снять отметку`
+                            : `Отметить шаг ${i + 1} сделанным`
+                        }
+                        onClick={() => toggleCoachStepDone(i)}
+                      >
+                        {done ? (
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                            <path
+                              d="M2.5 6.2 4.8 8.5 9.5 3.5"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        ) : null}
+                      </button>
+                      <button
+                        type="button"
+                        className="coach-step-head"
+                        aria-expanded={open}
+                        onClick={() => setOpenCoachStep(open ? -1 : i)}
+                      >
+                        <span className="coach-step-num">{i + 1}</span>
+                        <b>{step.title}</b>
+                        <span className="coach-step-toggle">
+                          {open
+                            ? "Свернуть"
+                            : done
+                              ? "Сделано"
+                              : current
+                                ? "Сейчас"
+                                : hasHints
+                                  ? "Помощь"
+                                  : ""}
+                        </span>
+                      </button>
+                    </div>
                     {open && (
                       <div className="coach-step-body">
                         {(step.action || step.why) && (
@@ -1067,6 +1136,13 @@ export default function Home() {
                         {!hasHints && (
                           <p>Сформулируйте этот шаг своими словами — по цели разговора.</p>
                         )}
+                        <button
+                          type="button"
+                          className={done ? "coach-mark-btn done" : "coach-mark-btn"}
+                          onClick={() => toggleCoachStepDone(i)}
+                        >
+                          {done ? "✓ Сделано — снять отметку" : "Отметить шаг сделанным"}
+                        </button>
                       </div>
                     )}
                   </article>
