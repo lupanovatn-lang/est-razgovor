@@ -304,9 +304,64 @@ button { color: inherit; }
 }
 .plan-goal { display: none; }
 .plan-bottom-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
-.plan-bottom-actions .rehearse-button { width: auto; margin-top: 0; margin-left: auto; min-width: 160px; }
 .text-action { border: 0; background: transparent; padding: 8px 4px; color: #6257e9; font-size: 13px; font-weight: 600; cursor: pointer; }
 .text-action:hover { color: #4e43da; }
+.rehearse-invite {
+  display: grid;
+  gap: 16px;
+  margin-top: 22px;
+  padding: 22px 22px 20px;
+  border-top: 1px solid #e5e6f3;
+}
+.rehearse-invite-copy h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1.25;
+  color: #1f2133;
+}
+.rehearse-invite-copy p {
+  margin: 0;
+  max-width: 52ch;
+  color: #6d718a;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.rehearse-invite-points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+}
+.rehearse-invite-points li {
+  position: relative;
+  padding-left: 14px;
+  color: #5045ce;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.rehearse-invite-points li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6257e9;
+}
+.rehearse-invite .rehearse-button {
+  width: auto;
+  min-width: 180px;
+  margin-top: 0;
+  justify-self: start;
+  padding: 13px 18px;
+  font-size: 13px;
+}
 
 .top-strip { grid-column: 1 / -1; background: #c9c3ff; display: flex; align-items: center; justify-content: center; gap: 22px; padding: 0 24px; font-size: 13px; color: #28294a; }
 .top-strip > span { display: none; }
