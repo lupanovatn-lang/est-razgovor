@@ -475,7 +475,7 @@ export default function Home() {
 
           <fieldset className="settings-fields" disabled={paramsLocked}>
           <label className="field-label" htmlFor="topic">
-            Тема <span className="field-req">обяз.</span>
+            Тема <span className="field-req">*</span>
           </label>
           <div className="select-wrap">
             <select
@@ -496,7 +496,7 @@ export default function Home() {
           </div>
 
           <label className="field-label" htmlFor="situation">
-            Что случилось? <span className="field-req">обяз.</span>
+            Что случилось? <span className="field-req">*</span>
           </label>
           <textarea
             id="situation"
