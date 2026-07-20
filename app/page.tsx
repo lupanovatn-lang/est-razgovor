@@ -13,7 +13,7 @@ import {
 } from "../lib/plans";
 import {
   createRecognition,
-  speakRu,
+  speakChild,
   speechSupported,
   stopSpeaking,
 } from "../lib/speech";
@@ -496,7 +496,7 @@ export default function Home() {
       setCoachActiveStep((prev) => Math.max(prev ?? 1, nextActive));
       setTryPhrase(data.tryPhrase || "");
       setShowCoachPhrase(false);
-      if (voiceOut && childText) speakRu(childText);
+      if (voiceOut && childText) void speakChild(childText, age);
     } catch (e) {
       setRehearseError(e instanceof Error ? e.message : "Ошибка репетиции");
     } finally {
