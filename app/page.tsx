@@ -491,13 +491,20 @@ export default function Home() {
     const stepWord =
       plan.steps.length === 1 ? "шаг" : plan.steps.length < 5 ? "шага" : "шагов";
 
+    const focusSettings = () => {
+      const el = document.getElementById("situation");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+    };
+
     return (
       <section className="plan-wrap">
         <header className="plan-header">
           <div>
             <h1>{plan.title}</h1>
-            <p>
-              План из {plan.steps.length} {stepWord} · ребёнку {childName}
+            <p className="plan-goal">{goalText || goalLabel(goalKind)}</p>
+            <p className="plan-meta">
+              {topic} · {childName} · {plan.steps.length} {stepWord}
               {planSource === "fallback" ? " · шаблон" : ""}
             </p>
             {planWarning && <p className="plan-warning">{planWarning}</p>}
@@ -514,16 +521,8 @@ export default function Home() {
               <img src="/copy-ref.png" alt="" />
               {copied ? "Скопировано" : "Копировать"}
             </button>
-            <button className="rehearse-button inline" onClick={() => void startRehearsal()}>
-              Потренироваться
-            </button>
           </div>
         </header>
-
-        <div className="prep-banner">
-          <span>Напоминание</span>
-          <p>{plan.reminder}</p>
-        </div>
 
         {(plan.nonNegotiable || plan.discussable) && (
           <div className="boundary-split">
@@ -547,6 +546,20 @@ export default function Home() {
             const n = String(i + 1).padStart(2, "0");
             return <PlanItem key={n} n={n} title={s.title} preview={s.why} step={s} />;
           })}
+        </div>
+
+        <div className="plan-bottom-actions">
+          <button type="button" className="edit-plan-button" onClick={focusSettings}>
+            <img src="/pencil-ref.png" alt="" />
+            Изменить данные
+          </button>
+          <button
+            type="button"
+            className="rehearse-button"
+            onClick={() => void startRehearsal()}
+          >
+            Потренироваться
+          </button>
         </div>
       </section>
     );

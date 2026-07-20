@@ -58,9 +58,12 @@ button { color: inherit; }
 .empty-plan h1 { margin: 0 0 10px; font-size: 26px; letter-spacing: -.025em; line-height: 1.2; }
 .empty-plan p { margin: 0; color: #7c8099; font-size: 14px; line-height: 1.55; }
 
-.prep-banner { margin: 0 0 16px; padding: 14px 16px; border-radius: 14px; border: 1px solid #e0e2ee; background: rgba(255,255,255,.88); }
-.prep-banner span { display: block; margin-bottom: 6px; color: #6b62e8; font-size: 11px; font-weight: 650; }
-.prep-banner p { margin: 0; color: #3f435a; font-size: 13px; line-height: 1.5; }
+.prep-banner { display: none; }
+.plan-goal { margin: 0 0 6px !important; max-width: 46ch; color: #3f435a !important; font-size: 15px !important; line-height: 1.4 !important; font-weight: 500; }
+.plan-meta { margin: 0 !important; color: #80849f !important; font-size: 12px !important; }
+.plan-bottom-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.plan-bottom-actions .edit-plan-button,
+.plan-bottom-actions .rehearse-button { width: auto; min-width: 180px; margin-top: 0; flex: 1; }
 .rehearse-button.inline { width: auto; margin-top: 0; padding: 9px 14px; }
 
 .top-strip { grid-column: 1 / -1; background: #c9c3ff; display: flex; align-items: center; justify-content: center; gap: 22px; padding: 0 24px; font-size: 13px; color: #28294a; }
@@ -198,7 +201,6 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .rehearse-cta button { border: 0; border-radius: 9px; background: white; padding: 11px 15px; color: #554ad8; font-size: 11px; font-weight: 700; cursor: pointer; }
 
 /* Plan workspace */
-.plan-wrap { width: min(860px, 100%); }
 .plan-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin: 4px 0 18px; }
 .plan-header h1 { max-width: 760px; margin: 0 0 7px; font-size: 28px; line-height: 1.15; letter-spacing: -.032em; }
 .plan-header p { margin: 0; color: #80849f; font-size: 12px; }
