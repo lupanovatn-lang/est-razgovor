@@ -620,20 +620,20 @@ export default function Home() {
 
   function GeneratingState() {
     const lastStage = GENERATING_STAGES.length - 1;
-    const waiting = statusIndex >= lastStage && waitTick > 0;
+    const waiting = statusIndex >= lastStage;
     const waitLine =
       GENERATING_WAIT_LINES[waitTick % GENERATING_WAIT_LINES.length] ??
       GENERATING_WAIT_LINES[0];
     const stage = waiting
-      ? waitLine
+      ? waitTick > 0
+        ? waitLine
+        : (GENERATING_STAGES[lastStage] ?? GENERATING_STAGES[0])
       : (GENERATING_STAGES[statusIndex] ?? GENERATING_STAGES[0]);
-    const step = waiting
-      ? GENERATING_STAGES.length + (waitTick % GENERATING_WAIT_LINES.length) + 1
-      : statusIndex + 1;
-    const total = GENERATING_STAGES.length + GENERATING_WAIT_LINES.length;
+    const total = GENERATING_STAGES.length;
+    const step = Math.min(statusIndex + 1, total);
     const progress = waiting
-      ? Math.min(92, 72 + (waitTick % GENERATING_WAIT_LINES.length) * 4)
-      : Math.round(((statusIndex + 1) / total) * 100);
+      ? Math.min(94, 78 + Math.min(waitTick, 8) * 2)
+      : Math.round((step / total) * 78);
 
     return (
       <section className="generating-progress" aria-live="polite" aria-busy="true">
@@ -655,7 +655,7 @@ export default function Home() {
         </div>
         <div className="generating-meta">
           <span>
-            {Math.min(step, total)} / {total}
+            {step} / {total}
           </span>
           <span className="generating-stage">{stage.label}</span>
         </div>
