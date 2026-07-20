@@ -41,12 +41,13 @@ const reactions = [
 
 const STORAGE_KEY = "est-razgovor-conversations";
 
-const GENERATING_STATUSES = [
-  "Считываем ситуацию",
-  "Уточняем желаемый результат",
-  "Подбираем структуру разговора",
-  "Формулируем фразы и реакции",
-  "Собираем план",
+const GENERATING_STAGES = [
+  { label: "Тема", text: "Разбираю тему и параметры" },
+  { label: "Ситуация", text: "Считываю, что случилось" },
+  { label: "Цель", text: "Уточняю желаемый результат" },
+  { label: "Структура", text: "Подбираю структуру разговора" },
+  { label: "Фразы", text: "Формулирую фразы и реакции" },
+  { label: "План", text: "Собираю план" },
 ];
 
 function GoalIcon({ kind }: { kind: GoalKind }) {
@@ -127,8 +128,8 @@ export default function Home() {
     }
     setStatusIndex(0);
     const id = window.setInterval(() => {
-      setStatusIndex((i) => Math.min(i + 1, GENERATING_STATUSES.length - 1));
-    }, 1100);
+      setStatusIndex((i) => Math.min(i + 1, GENERATING_STAGES.length - 1));
+    }, 1000);
     return () => window.clearInterval(id);
   }, [generating]);
 
@@ -530,39 +531,35 @@ export default function Home() {
   }
 
   function GeneratingState() {
-    return (
-      <section className="generating-wait" aria-live="polite" aria-busy="true">
-        <h1>Составляем план разговора</h1>
-        <p className="generating-lead">Подстраиваем шаги под вашу ситуацию</p>
+    const stage = GENERATING_STAGES[statusIndex] ?? GENERATING_STAGES[0];
+    const step = statusIndex + 1;
+    const total = GENERATING_STAGES.length;
+    const progress = Math.round((step / total) * 100);
 
-        <ul className="generating-statuses">
-          {GENERATING_STATUSES.map((label, i) => {
-            const done = i < statusIndex;
-            const active = i === statusIndex;
-            return (
-              <li key={label} className={done ? "done" : active ? "active" : ""}>
-                <span className="status-mark" aria-hidden="true">
-                  {done ? (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path
-                        d="M3 7.2 5.8 10 11 3.8"
-                        stroke="currentColor"
-                        strokeWidth="1.7"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  ) : active ? (
-                    <i className="status-pulse" />
-                  ) : (
-                    <i className="status-idle" />
-                  )}
-                </span>
-                <span>{label}{active ? "…" : ""}</span>
-              </li>
-            );
-          })}
-        </ul>
+    return (
+      <section className="generating-progress" aria-live="polite" aria-busy="true">
+        <div className="generating-dots" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </div>
+        <p className="generating-status">{stage.text}</p>
+        <div
+          className="generating-bar"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progress}
+          aria-label={stage.text}
+        >
+          <span style={{ width: `${progress}%` }} />
+        </div>
+        <div className="generating-meta">
+          <span>
+            {step} / {total}
+          </span>
+          <span className="generating-stage">{stage.label}</span>
+        </div>
       </section>
     );
   }
