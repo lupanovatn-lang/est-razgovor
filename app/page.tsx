@@ -39,6 +39,14 @@ const reactions = [
 
 const STORAGE_KEY = "est-razgovor-conversations";
 
+const GENERATING_STATUSES = [
+  "Считываем ситуацию",
+  "Уточняем цель разговора",
+  "Подбираем структуру шагов",
+  "Формулируем фразы и реакции",
+  "Собираем план",
+];
+
 function loadSaved(): SavedConversation[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -82,6 +90,7 @@ export default function Home() {
   const [feedback, setFeedback] = useState("");
   const [rehearseLoading, setRehearseLoading] = useState(false);
   const [rehearseError, setRehearseError] = useState("");
+  const [statusIndex, setStatusIndex] = useState(0);
 
   const childName = age ? `${age} лет` : "ребёнок";
   const suggested = useMemo(
@@ -96,6 +105,18 @@ export default function Home() {
   useEffect(() => {
     if (!goalTouched) setGoalKind(suggested);
   }, [suggested, goalTouched]);
+
+  useEffect(() => {
+    if (!generating) {
+      setStatusIndex(0);
+      return;
+    }
+    setStatusIndex(0);
+    const id = window.setInterval(() => {
+      setStatusIndex((i) => Math.min(i + 1, GENERATING_STATUSES.length - 1));
+    }, 1600);
+    return () => window.clearInterval(id);
+  }, [generating]);
 
   const resetNew = () => {
     setActiveId(null);
@@ -486,6 +507,35 @@ export default function Home() {
     );
   }
 
+  function GeneratingState() {
+    return (
+      <div className="generating-plan" aria-live="polite" aria-busy="true">
+        <div className="generating-orb" aria-hidden="true">
+          <span />
+        </div>
+        <h1>Составляем план</h1>
+        <p className="generating-current">{GENERATING_STATUSES[statusIndex]}…</p>
+        <ul className="generating-statuses">
+          {GENERATING_STATUSES.map((label, i) => {
+            const done = i < statusIndex;
+            const active = i === statusIndex;
+            return (
+              <li
+                key={label}
+                className={done ? "done" : active ? "active" : ""}
+              >
+                <span className="status-mark" aria-hidden="true">
+                  {done ? "✓" : active ? "●" : "○"}
+                </span>
+                {label}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
+
   function PlanView() {
     if (!plan) return null;
     const stepWord =
@@ -824,9 +874,11 @@ export default function Home() {
           <main>
             {view === "rehearsal"
               ? Rehearsal()
-              : view === "plan" && plan
-                ? PlanView()
-                : EmptyState()}
+              : generating
+                ? GeneratingState()
+                : view === "plan" && plan
+                  ? PlanView()
+                  : EmptyState()}
           </main>
           <footer>
             <p>ИИ может ошибаться. В кризисной ситуации обратитесь к специалисту.</p>

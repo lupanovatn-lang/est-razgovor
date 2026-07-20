@@ -58,6 +58,23 @@ button { color: inherit; }
 .empty-plan h1 { margin: 0 0 10px; font-size: 26px; letter-spacing: -.025em; line-height: 1.2; }
 .empty-plan p { margin: 0; color: #7c8099; font-size: 14px; line-height: 1.55; }
 
+.generating-plan { width: min(420px, 100%); margin: 10vh auto 0; text-align: center; }
+.generating-orb { width: 56px; height: 56px; margin: 0 auto 20px; border-radius: 50%; background: linear-gradient(135deg, #d5d0ff, #c5dcff); display: grid; place-items: center; animation: pulse-orb 1.4s ease-in-out infinite; }
+.generating-orb span { width: 18px; height: 18px; border-radius: 50%; background: #fff; opacity: .85; }
+.generating-plan h1 { margin: 0 0 8px; font-size: 26px; letter-spacing: -.025em; }
+.generating-current { margin: 0 0 22px; color: #6257e9; font-size: 14px; font-weight: 600; min-height: 1.4em; }
+.generating-statuses { list-style: none; margin: 0 auto; padding: 0; width: fit-content; text-align: left; display: grid; gap: 10px; }
+.generating-statuses li { display: flex; align-items: center; gap: 10px; color: #a0a3b8; font-size: 13px; transition: color .2s ease; }
+.generating-statuses li.active { color: #3f435a; font-weight: 600; }
+.generating-statuses li.done { color: #6d718a; }
+.status-mark { width: 16px; text-align: center; color: #b0b3c8; font-size: 11px; }
+.generating-statuses li.active .status-mark { color: #6257e9; }
+.generating-statuses li.done .status-mark { color: #7a84d8; }
+@keyframes pulse-orb {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.06); opacity: .88; }
+}
+
 .prep-banner { display: none; }
 .plan-goal { margin: 0 0 6px !important; max-width: 46ch; color: #3f435a !important; font-size: 15px !important; line-height: 1.4 !important; font-weight: 500; }
 .plan-meta { margin: 0 !important; color: #80849f !important; font-size: 12px !important; }
