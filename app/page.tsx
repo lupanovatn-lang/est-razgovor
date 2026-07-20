@@ -11,6 +11,12 @@ import {
   type GoalKind,
   type PlanStep,
 } from "../lib/plans";
+import {
+  createRecognition,
+  speakRu,
+  speechSupported,
+  stopSpeaking,
+} from "../lib/speech";
 
 type View = "compose" | "plan" | "rehearsal" | "saved";
 
@@ -129,6 +135,12 @@ export default function Home() {
   const [coachActiveStep, setCoachActiveStep] = useState<number | null>(null);
   const [tryPhrase, setTryPhrase] = useState("");
   const [showCoachPhrase, setShowCoachPhrase] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [voiceOut, setVoiceOut] = useState(true);
+  const [speechOk, setSpeechOk] = useState(false);
+  const recognitionRef = useRef<ReturnType<typeof createRecognition>>(null);
+  const listeningRef = useRef(false);
+  const sendVoiceOnEndRef = useRef(true);
   const [rehearseLoading, setRehearseLoading] = useState(false);
   const [rehearseError, setRehearseError] = useState("");
   const [statusIndex, setStatusIndex] = useState(0);
@@ -370,6 +382,29 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    setSpeechOk(speechSupported());
+    // Chrome loads voices asynchronously.
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+      const onVoices = () => window.speechSynthesis.getVoices();
+      window.speechSynthesis.addEventListener("voiceschanged", onVoices);
+      return () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", onVoices);
+        stopSpeaking();
+        recognitionRef.current?.abort();
+      };
+    }
+    return () => {
+      stopSpeaking();
+      recognitionRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    listeningRef.current = listening;
+  }, [listening]);
+
   const copyPlan = async () => {
     if (!plan) return;
     const lines = [
@@ -403,6 +438,9 @@ export default function Home() {
 
   const startRehearsal = () => {
     if (!plan) return;
+    stopSpeaking();
+    recognitionRef.current?.abort();
+    setListening(false);
     setView("rehearsal");
     setMessages([]);
     setReply("");
@@ -417,6 +455,7 @@ export default function Home() {
   const sendReply = async (preset?: string) => {
     const parentText = (preset ?? reply).trim();
     if (!parentText || !plan || rehearseLoading) return;
+    stopSpeaking();
     setReply("");
     const nextHistory: ChatMessage[] = [...messages, { role: "parent", text: parentText }];
     setMessages(nextHistory);
@@ -446,7 +485,8 @@ export default function Home() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось получить ответ");
-      setMessages([...nextHistory, { role: "child", text: data.childMessage }]);
+      const childText = String(data.childMessage || "").trim();
+      setMessages([...nextHistory, { role: "child", text: childText }]);
       setCoachTip(data.coachTip || "");
       const stepCount = plan.steps.length;
       const parsed = Number(data.activeStep);
@@ -456,11 +496,78 @@ export default function Home() {
       setCoachActiveStep((prev) => Math.max(prev ?? 1, nextActive));
       setTryPhrase(data.tryPhrase || "");
       setShowCoachPhrase(false);
+      if (voiceOut && childText) speakRu(childText);
     } catch (e) {
       setRehearseError(e instanceof Error ? e.message : "Ошибка репетиции");
     } finally {
       setRehearseLoading(false);
     }
+  };
+
+  const stopListening = (opts?: { send?: boolean }) => {
+    sendVoiceOnEndRef.current = opts?.send !== false;
+    listeningRef.current = false;
+    setListening(false);
+    try {
+      recognitionRef.current?.stop();
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const startListening = () => {
+    if (rehearseLoading || listening) return;
+    const recognition = createRecognition();
+    if (!recognition) {
+      setRehearseError("Голосовой ввод в этом браузере недоступен. Попробуйте Chrome.");
+      return;
+    }
+    recognitionRef.current = recognition;
+    let finalText = "";
+    sendVoiceOnEndRef.current = true;
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const chunk = event.results[i][0]?.transcript || "";
+        if (event.results[i].isFinal) finalText = `${finalText} ${chunk}`.trim();
+        else interim = `${interim} ${chunk}`.trim();
+      }
+      setReply((finalText || interim).trim());
+    };
+    recognition.onerror = (event) => {
+      if (event.error === "aborted") {
+        sendVoiceOnEndRef.current = false;
+      }
+      listeningRef.current = false;
+      setListening(false);
+      if (event.error === "not-allowed") {
+        setRehearseError("Разрешите доступ к микрофону, чтобы говорить вслух.");
+      } else if (event.error !== "aborted" && event.error !== "no-speech") {
+        setRehearseError("Не удалось распознать речь. Попробуйте ещё раз.");
+      }
+    };
+    recognition.onend = () => {
+      listeningRef.current = false;
+      setListening(false);
+      const spoken = finalText.trim();
+      if (spoken && sendVoiceOnEndRef.current) void sendReply(spoken);
+    };
+    try {
+      setRehearseError("");
+      setReply("");
+      listeningRef.current = true;
+      setListening(true);
+      recognition.start();
+    } catch {
+      setListening(false);
+      listeningRef.current = false;
+      setRehearseError("Не удалось включить микрофон.");
+    }
+  };
+
+  const toggleListening = () => {
+    if (listening) stopListening({ send: true });
+    else startListening();
   };
 
   function SettingsPanel() {
@@ -770,15 +877,15 @@ export default function Home() {
 
         <aside className="rehearse-invite">
           <div className="rehearse-invite-copy">
-            <h2>Потренируйте разговор</h2>
-            <p>Проиграйте первые фразы с ИИ до настоящего разговора.</p>
+            <h2>Потренируйте разговор вслух</h2>
+            <p>Проговорите фразы голосом — ИИ ответит как ребёнок.</p>
           </div>
           <button
             type="button"
             className="rehearse-button"
             onClick={startRehearsal}
           >
-            Начать репетицию
+            Начать устную репетицию
           </button>
         </aside>
       </section>
@@ -956,10 +1063,10 @@ export default function Home() {
             <div className="messages">
               {messages.length === 0 && !rehearseLoading && (
                 <div className="messages-empty">
-                  <p className="messages-empty-kicker">Репетиция</p>
+                  <p className="messages-empty-kicker">Устная репетиция</p>
                   <p>
-                    Здесь отвечает ИИ в роли ребёнка. Начните своими словами или
-                    скажите готовую фразу справа.
+                    Говорите вслух, как с ребёнком. Нажмите микрофон — ваша фраза
+                    уйдёт в диалог, ответ ребёнка прозвучит голосом.
                   </p>
                 </div>
               )}
@@ -975,17 +1082,49 @@ export default function Home() {
               {rehearseLoading && (
                 <div className="message child">
                   <small>Ребёнок</small>
-                  печатает…
+                  думает…
                 </div>
               )}
             </div>
             {rehearseError && <div className="form-error rehearse-error">{rehearseError}</div>}
-            <div className="composer">
+            <div className="composer voice-composer">
+              {speechOk && (
+                <button
+                  type="button"
+                  className={listening ? "mic-btn listening" : "mic-btn"}
+                  onClick={toggleListening}
+                  disabled={rehearseLoading}
+                  aria-pressed={listening}
+                  aria-label={listening ? "Остановить запись" : "Говорить вслух"}
+                  title={listening ? "Готово — отправить" : "Говорить вслух"}
+                >
+                  {listening ? (
+                    <span className="mic-stop" aria-hidden="true" />
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                      <rect x="6.5" y="2" width="5" height="9" rx="2.5" stroke="currentColor" strokeWidth="1.6" />
+                      <path
+                        d="M4 8.5a5 5 0 0 0 10 0"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                      />
+                      <path d="M9 13.5v2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </button>
+              )}
               <textarea
                 rows={2}
-                placeholder="Ваша реплика…"
+                placeholder={
+                  listening
+                    ? "Слушаю… говорите"
+                    : speechOk
+                      ? "Или напишите реплику…"
+                      : "Ваша реплика…"
+                }
                 value={reply}
-                disabled={rehearseLoading}
+                disabled={rehearseLoading || listening}
                 onChange={(e) => setReply(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -997,12 +1136,32 @@ export default function Home() {
               <button
                 onClick={() => void sendReply()}
                 aria-label="Отправить"
-                disabled={rehearseLoading || !reply.trim()}
+                disabled={rehearseLoading || listening || !reply.trim()}
               >
                 ↑
               </button>
             </div>
-            <div className="composer-note">Enter — отправить · Можно ошибаться</div>
+            <div className="composer-note">
+              {speechOk ? (
+                <>
+                  Микрофон — сказать вслух · ответ ребёнка{" "}
+                  <button
+                    type="button"
+                    className="voice-toggle"
+                    onClick={() => {
+                      setVoiceOut((v) => {
+                        if (v) stopSpeaking();
+                        return !v;
+                      });
+                    }}
+                  >
+                    {voiceOut ? "со звуком" : "без звука"}
+                  </button>
+                </>
+              ) : (
+                "Enter — отправить · Голос лучше работает в Chrome"
+              )}
+            </div>
           </div>
 
           <aside className="coach-card">
