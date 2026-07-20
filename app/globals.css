@@ -640,7 +640,36 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .coach-title > span { color: #675cf0; }
 .coach-title b, .coach-title small { display: block; }
 .coach-title b { font-size: 13px; }
-.coach-title small { margin-top: 2px; color: #979aad; font-size: 10px; }
+.coach-title small { margin-top: 2px; color: #979aad; font-size: 10px; line-height: 1.35; }
+.coach-brief {
+  margin: 0 0 14px;
+  color: #6d718a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.coach-steps-label {
+  margin: 0 0 8px;
+  color: #8a8eaa;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.coach-block > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #655aef;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.coach-block p {
+  margin: 0;
+  color: #6d718a;
+  font-size: 12px;
+  line-height: 1.45;
+}
 .coach-live {
   margin: 0 0 12px;
   padding: 12px;
