@@ -899,6 +899,7 @@ footer p { margin: 0; }
   .top-strip { justify-content: space-between; padding: 0 14px; }
   .top-strip p { font-size: 11px; }
   .top-strip button { padding: 7px 9px; font-size: 10px; }
+  .rehearse-invite-copy p { white-space: normal; }
   .form-card { padding: 28px 20px; border-radius: 15px; }
   .form-card h1, .plan-top h1 { font-size: 25px; }
   .plan-header { display: block; }
