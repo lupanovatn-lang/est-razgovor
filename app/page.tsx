@@ -121,7 +121,6 @@ export default function Home() {
   const [paramsUnlocked, setParamsUnlocked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
-  const [openCoachStep, setOpenCoachStep] = useState(-1);
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -188,7 +187,6 @@ export default function Home() {
     setReply("");
     setCoachTip("");
     setCoachActiveStep(null);
-    setOpenCoachStep(-1);
     setTryPhrase("");
     setRehearseError("");
     setCopied(false);
@@ -379,7 +377,6 @@ export default function Home() {
     setCoachTip("");
     setCoachActiveStep(1);
     setTryPhrase("");
-    setOpenCoachStep(-1);
   };
 
   const sendReply = async () => {
@@ -940,36 +937,62 @@ export default function Home() {
                 total - 1,
                 Math.max(0, (coachActiveStep ?? 1) - 1),
               );
-              const doneCount = Math.min(total, Math.max(0, (coachActiveStep ?? 1) - 1));
               const focusStep = total > 0 ? steps[focusIndex] : undefined;
               const tipText =
                 coachTip ||
-                (messages.length === 0 && focusStep
-                  ? "Начните своими словами или возьмите фразу"
+                (messages.length === 0
+                  ? "Скажите первую фразу — своими словами или из подсказки"
                   : "");
               const tipPhrase =
                 tryPhrase ||
-                (messages.length === 0 ? focusStep?.phrase || "" : "");
-              const showFocus = !!(tipText || tipPhrase) && !!focusStep;
+                (messages.length === 0 ? focusStep?.phrase || "" : "") ||
+                focusStep?.phrase ||
+                "";
+              const avoid = focusStep?.avoid?.trim() || "";
+              const upcoming = steps.slice(focusIndex + 1);
 
               return (
                 <>
                   <div className="coach-title">
                     <div>
                       <b>Тренажёр</b>
-                      <small>
-                        Шаг {Math.min(total, focusIndex + 1)} / {total}
-                      </small>
+                      <small>Справа — только текущий ход</small>
                     </div>
                   </div>
 
-                  {showFocus && (
+                  <ol className="coach-rail" aria-label="Прогресс разговора">
+                    {steps.map((step, i) => {
+                      const done = i < focusIndex;
+                      const current = i === focusIndex;
+                      return (
+                        <li
+                          key={`${step.title}-${i}`}
+                          className={[
+                            "coach-rail-item",
+                            done ? "done" : "",
+                            current ? "current" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                        >
+                          <span className="coach-rail-mark" aria-hidden="true">
+                            {done ? "✓" : i + 1}
+                          </span>
+                          <span className="coach-rail-label">{step.title}</span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+
+                  {focusStep && (
                     <div className="coach-now">
                       <div className="coach-now-top">
-                        <span>Сейчас</span>
-                        <span className="coach-now-n">Шаг {focusIndex + 1}</span>
+                        <span>Ваш ход</span>
+                        <span className="coach-now-n">
+                          {focusIndex + 1} из {total}
+                        </span>
                       </div>
-                      <p className="coach-now-title">{focusStep?.title}</p>
+                      <p className="coach-now-title">{focusStep.title}</p>
                       {tipText ? <p className="coach-now-tip">{tipText}</p> : null}
                       {tipPhrase ? (
                         <button
@@ -981,93 +1004,25 @@ export default function Home() {
                           <span>«{tipPhrase}»</span>
                           <em>В чат</em>
                         </button>
-                      ) : null}
+                      ) : (
+                        <p className="coach-now-tip">
+                          Сформулируйте этот шаг своими словами в чате.
+                        </p>
+                      )}
+                      {avoid ? <p className="coach-avoid">Не: {avoid}</p> : null}
                     </div>
                   )}
 
-                  <div className="coach-steps" aria-label="Прогресс по шагам плана">
-                    {steps.map((step, i) => {
-                      const open = openCoachStep === i;
-                      const done = i < doneCount;
-                      const current = !done && i === focusIndex;
-                      const phrase = step.phrase?.trim() || "";
-                      const avoid = step.avoid?.trim() || "";
-                      const alt = (step.questions || []).filter(Boolean).slice(0, 1);
-                      const hasHelp = !!(phrase || avoid || alt.length);
-                      return (
-                        <article
-                          key={`${step.title}-${i}`}
-                          className={[
-                            "coach-step",
-                            open ? "open" : "",
-                            done ? "done" : "",
-                            current ? "current" : "",
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        >
-                          <div className="coach-step-row">
-                            <span
-                              className={done ? "coach-check done" : "coach-check"}
-                              aria-hidden="true"
-                            >
-                              {done ? (
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                  <path
-                                    d="M2.5 6.2 4.8 8.5 9.5 3.5"
-                                    stroke="currentColor"
-                                    strokeWidth="1.8"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              ) : (
-                                <span>{i + 1}</span>
-                              )}
-                            </span>
-                            <button
-                              type="button"
-                              className="coach-step-head"
-                              aria-expanded={open}
-                              onClick={() => setOpenCoachStep(open ? -1 : i)}
-                            >
-                              <b>{step.title}</b>
-                              <span className="coach-step-toggle">
-                                {open ? "−" : hasHelp ? "+" : ""}
-                              </span>
-                            </button>
-                          </div>
-                          {open && hasHelp ? (
-                            <div className="coach-step-body">
-                              {phrase ? (
-                                <button
-                                  type="button"
-                                  className="coach-now-phrase nested"
-                                  disabled={rehearseLoading}
-                                  onClick={() => setReply(phrase)}
-                                >
-                                  <span>«{phrase}»</span>
-                                  <em>В чат</em>
-                                </button>
-                              ) : null}
-                              {alt.map((q) => (
-                                <button
-                                  key={q}
-                                  type="button"
-                                  className="coach-alt-phrase"
-                                  disabled={rehearseLoading}
-                                  onClick={() => setReply(q)}
-                                >
-                                  {q}
-                                </button>
-                              ))}
-                              {avoid ? <p className="coach-avoid">Не: {avoid}</p> : null}
-                            </div>
-                          ) : null}
-                        </article>
-                      );
-                    })}
-                  </div>
+                  {upcoming.length > 0 && (
+                    <div className="coach-next">
+                      <span>Потом</span>
+                      <ul>
+                        {upcoming.map((step) => (
+                          <li key={step.title}>{step.title}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </>
               );
             })()}
