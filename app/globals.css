@@ -188,16 +188,8 @@ button { color: inherit; }
 .settings-lead { margin: 0 0 20px; color: #7c8099; font-size: 13px; line-height: 1.5; }
 .field-label { display: block; margin: 14px 0 7px; color: #3f435a; font-size: 12px; font-weight: 600; }
 .field-req {
-  display: inline-block;
-  margin-left: 4px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  background: #fde8ea;
   color: #c24b52;
-  font-size: 10px;
   font-weight: 700;
-  letter-spacing: .02em;
-  vertical-align: 1px;
 }
 .field-error {
   margin: 6px 0 0;
