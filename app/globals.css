@@ -58,11 +58,11 @@ button { color: inherit; }
 .empty-plan h1 { margin: 0 0 10px; font-size: 26px; letter-spacing: -.025em; line-height: 1.2; }
 .empty-plan p { margin: 0; color: #7c8099; font-size: 14px; line-height: 1.55; }
 
-.generating-plan .generating-title { color: #6d718a; font-weight: 600; }
-.skeleton-title { height: 30px; width: min(420px, 78%); border-radius: 10px; margin-bottom: 2px; }
-.skeleton-line { display: block; height: 12px; width: 100%; border-radius: 8px; }
-.skeleton-line.title-line { height: 15px; width: min(280px, 72%); }
-.skeleton-line.short { width: 58%; margin-top: 8px; }
+.generating-plan .generating-title { margin: 0; color: #2f3144; font-weight: 700; }
+.generating-plan .skeleton-row.writing .plan-step-copy small { color: #6257e9; }
+.generating-plan .skeleton-row.done .plan-step-copy small { color: #8a8eaa; }
+.generating-plan .skeleton-row.wait .plan-step-copy b { color: #a0a3b8; }
+.generating-plan .skeleton-row.wait .plan-step-copy small { color: #b4b7c9; }
 .skeleton-row { opacity: .22; filter: grayscale(.15); transition: opacity .35s ease, background .3s ease, filter .3s ease; }
 .skeleton-row.done { opacity: .72; filter: none; }
 .skeleton-row.writing { opacity: 1; filter: none; background: linear-gradient(90deg, rgba(239,240,255,.9), rgba(255,255,255,.35)); }

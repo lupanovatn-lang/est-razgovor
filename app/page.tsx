@@ -41,6 +41,13 @@ const STORAGE_KEY = "est-razgovor-conversations";
 
 const GENERATING_STEP_SLOTS = 4;
 
+const GENERATING_STEP_LABELS = [
+  { title: "Как начать разговор", hint: "Подбираем тон и первую фразу" },
+  { title: "Как услышать ребёнка", hint: "Формулируем вопросы и реакции" },
+  { title: "Как предложить правило", hint: "Собираем ясное предложение" },
+  { title: "Как закрепить договорённость", hint: "Пишем короткий итог шага" },
+];
+
 function GoalIcon({ kind }: { kind: GoalKind }) {
   // Always show a target for the conversation goal.
   void kind;
@@ -514,17 +521,12 @@ export default function Home() {
   }
 
   function GeneratingState() {
-    const filled = Math.min(GENERATING_STEP_SLOTS, statusIndex);
-    const titleReady = statusIndex > 0;
+    const filled = Math.min(GENERATING_STEP_SLOTS, Math.max(1, statusIndex));
 
     return (
       <section className="plan-wrap generating-plan" aria-live="polite" aria-busy="true">
         <header className="plan-header">
-          {titleReady ? (
-            <h1 className="generating-title">Составляем план…</h1>
-          ) : (
-            <div className="skeleton-title shimmer" aria-hidden="true" />
-          )}
+          <h1 className="generating-title">Составляем план разговора</h1>
           <div className="goal-badge">
             <span className="goal-badge-icon">
               <GoalIcon kind={goalKind} />
@@ -536,17 +538,23 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="plan-flow" aria-hidden="true">
-          {Array.from({ length: GENERATING_STEP_SLOTS }, (_, i) => {
+        <div className="plan-flow">
+          {GENERATING_STEP_LABELS.map((step, i) => {
             const state =
               i < filled - 1 ? "done" : i === filled - 1 ? "writing" : "wait";
             return (
-              <article key={i} className={`plan-step skeleton-row ${state}`}>
+              <article key={step.title} className={`plan-step skeleton-row ${state}`}>
                 <div className="plan-step-head">
                   <span className="plan-number">{i + 1}</span>
                   <span className="plan-step-copy">
-                    <span className="skeleton-line shimmer title-line" />
-                    <span className="skeleton-line shimmer short" />
+                    <b>{step.title}</b>
+                    <small>
+                      {state === "done"
+                        ? "Готово"
+                        : state === "writing"
+                          ? `${step.hint}…`
+                          : "Ждёт очереди"}
+                    </small>
                   </span>
                 </div>
               </article>
