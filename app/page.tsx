@@ -127,9 +127,11 @@ export default function Home() {
       return;
     }
     setStatusIndex(0);
+    // Don't reach the final stage until the plan is ready — avoids a long hang on 6/6.
+    const waitingMax = GENERATING_STAGES.length - 2;
     const id = window.setInterval(() => {
-      setStatusIndex((i) => Math.min(i + 1, GENERATING_STAGES.length - 1));
-    }, 1000);
+      setStatusIndex((i) => Math.min(i + 1, waitingMax));
+    }, 900);
     return () => window.clearInterval(id);
   }, [generating]);
 
@@ -531,10 +533,12 @@ export default function Home() {
   }
 
   function GeneratingState() {
+    const waitingMax = GENERATING_STAGES.length - 2;
     const stage = GENERATING_STAGES[statusIndex] ?? GENERATING_STAGES[0];
-    const step = statusIndex + 1;
+    const waiting = statusIndex >= waitingMax;
+    const step = Math.min(statusIndex + 1, waitingMax + 1);
     const total = GENERATING_STAGES.length;
-    const progress = Math.round((step / total) * 100);
+    const progress = waiting ? 78 : Math.round((step / total) * 100);
 
     return (
       <section className="generating-progress" aria-live="polite" aria-busy="true">
@@ -543,22 +547,24 @@ export default function Home() {
           <i />
           <i />
         </div>
-        <p className="generating-status">Составляем план разговора</p>
+        <p className="generating-status">
+          {waiting ? "Ещё немного — собираем план" : "Составляем план разговора"}
+        </p>
         <div
-          className="generating-bar"
+          className={waiting ? "generating-bar waiting" : "generating-bar"}
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={progress}
           aria-label="Составляем план разговора"
         >
-          <span style={{ width: `${progress}%` }} />
+          <span style={waiting ? undefined : { width: `${progress}%` }} />
         </div>
         <div className="generating-meta">
           <span>
             {step} / {total}
           </span>
-          <span className="generating-stage">{stage.label}</span>
+          <span className="generating-stage">{waiting ? "Почти готово" : stage.label}</span>
         </div>
       </section>
     );
