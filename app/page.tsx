@@ -149,7 +149,7 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось составить план");
       setPlan(data.plan as ConversationPlan);
-      setPlanSource(data.source === "openai" ? "openai" : "fallback");
+      setPlanSource(data.source === "openai" || data.source === "openrouter" ? "openai" : "fallback");
       setPlanWarning(data.warning || "");
       setOpenPlanStep("01");
       setStep("plan");

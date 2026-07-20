@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       return Response.json({
         plan: buildPlan(input.goalKind, input),
         source: "fallback",
-        warning: "OPENAI_API_KEY не задан — показан шаблонный план",
+        warning: "OPENROUTER_API_KEY не задан — показан шаблонный план",
       });
     }
 

@@ -14,7 +14,9 @@ services:
         value: "0.0.0.0"
       - key: NPM_CONFIG_PRODUCTION
         value: "false"
-      - key: OPENAI_API_KEY
+      - key: OPENROUTER_API_KEY
         sync: false
-      - key: OPENAI_MODEL
-        value: gpt-4.1-mini
+      - key: OPENROUTER_MODEL
+        value: openai/gpt-4.1-mini
+      - key: APP_URL
+        value: https://est-razgovor.onrender.com

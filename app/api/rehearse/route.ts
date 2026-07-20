@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       return Response.json(
         {
           error:
-            "OPENAI_API_KEY не задан на сервере. Добавьте ключ в переменные окружения Render.",
+            "OPENROUTER_API_KEY не задан на сервере. Добавьте ключ в переменные окружения Render.",
         },
         { status: 503 },
       );

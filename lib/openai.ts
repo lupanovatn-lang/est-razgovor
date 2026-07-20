@@ -1,11 +1,18 @@
 import type { ConversationPlan, GoalKind } from "./plans";
 import { goalLabel } from "./plans";
 
-const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
-const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const MODEL =
+  process.env.OPENROUTER_MODEL ||
+  process.env.OPENAI_MODEL ||
+  "openai/gpt-4.1-mini";
 
 export function getOpenAIKey() {
-  return process.env.OPENAI_API_KEY?.trim() || "";
+  return (
+    process.env.OPENROUTER_API_KEY?.trim() ||
+    process.env.OPENAI_API_KEY?.trim() ||
+    ""
+  );
 }
 
 export async function openaiJson<T>(args: {
@@ -15,14 +22,16 @@ export async function openaiJson<T>(args: {
 }): Promise<T> {
   const key = getOpenAIKey();
   if (!key) {
-    throw new Error("OPENAI_API_KEY is not configured");
+    throw new Error("OPENROUTER_API_KEY is not configured");
   }
 
-  const res = await fetch(OPENAI_URL, {
+  const res = await fetch(OPENROUTER_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
+      "HTTP-Referer": process.env.APP_URL || "https://est-razgovor.onrender.com",
+      "X-Title": "Est Razgovor",
     },
     body: JSON.stringify({
       model: MODEL,
@@ -37,14 +46,14 @@ export async function openaiJson<T>(args: {
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`OpenAI error ${res.status}: ${detail.slice(0, 400)}`);
+    throw new Error(`OpenRouter error ${res.status}: ${detail.slice(0, 400)}`);
   }
 
   const data = (await res.json()) as {
     choices?: { message?: { content?: string } }[];
   };
   const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error("Empty OpenAI response");
+  if (!content) throw new Error("Empty OpenRouter response");
   return JSON.parse(content) as T;
 }
 
