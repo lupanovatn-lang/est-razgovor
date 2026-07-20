@@ -42,12 +42,12 @@ const reactions = [
 const STORAGE_KEY = "est-razgovor-conversations";
 
 const GENERATING_STAGES = [
-  { label: "Тема", text: "Разбираю тему и параметры" },
-  { label: "Ситуация", text: "Считываю, что случилось" },
-  { label: "Цель", text: "Уточняю желаемый результат" },
-  { label: "Структура", text: "Подбираю структуру разговора" },
-  { label: "Фразы", text: "Формулирую фразы и реакции" },
-  { label: "План", text: "Собираю план" },
+  { label: "Тема" },
+  { label: "Ситуация" },
+  { label: "Цель" },
+  { label: "Структура" },
+  { label: "Фразы" },
+  { label: "План" },
 ];
 
 function GoalIcon({ kind }: { kind: GoalKind }) {
