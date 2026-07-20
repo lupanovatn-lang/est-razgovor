@@ -362,11 +362,14 @@ button { color: inherit; }
 .plan-bottom-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
 .text-action { border: 0; background: transparent; padding: 8px 4px; color: #6257e9; font-size: 13px; font-weight: 600; cursor: pointer; }
 .text-action:hover { color: #4e43da; }
-.plan-saved-mark {
+.plan-done-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 4px;
-  color: #8a8eaa;
+  color: #3a8c75;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 650;
 }
 .rehearse-invite {
   display: flex;

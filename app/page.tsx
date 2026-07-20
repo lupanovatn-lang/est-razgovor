@@ -60,6 +60,20 @@ const GENERATING_WAIT_LINES = [
   { label: "Почти", text: "Ещё чуть-чуть — почти готово" },
 ];
 
+function DoneCheck() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path
+        d="M3 7.2 5.8 10 11 3.8"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function GoalIcon({ kind }: { kind: GoalKind }) {
   // Always show a target for the conversation goal.
   void kind;
@@ -105,7 +119,6 @@ export default function Home() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [paramsUnlocked, setParamsUnlocked] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [savedFlash, setSavedFlash] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
@@ -176,6 +189,7 @@ export default function Home() {
     setSignals([]);
     setFeedback("");
     setRehearseError("");
+    setCopied(false);
     setView("compose");
   };
 
@@ -234,6 +248,7 @@ export default function Home() {
       }
       setOpenPlanStep("");
       setMoreReactions({});
+      setCopied(false);
       if (activeId) {
         const savedGoal =
           nextPlan.goal || goalText || deriveSituationGoal(situation, goalKind, goalText);
@@ -280,8 +295,6 @@ export default function Home() {
     setSavedList(next);
     persistSaved(next);
     setActiveId(item.id);
-    setSavedFlash(true);
-    setTimeout(() => setSavedFlash(false), 1600);
     setParamsUnlocked(false);
   };
 
@@ -343,7 +356,6 @@ export default function Home() {
     if (plan.discussable) lines.push(`Что можно решить вместе: ${plan.discussable}`);
     await navigator.clipboard?.writeText(lines.join("\n"));
     setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
   };
 
   const openingPhrase =
@@ -603,7 +615,7 @@ export default function Home() {
         </div>
         <h1>Здесь появится план разговора</h1>
         <p>
-          Заполните параметры слева и нажмите «Составить план». Структура шагов подстроится
+          Заполните параметры и нажмите «Составить план». Структура шагов подстроится
           под вашу цель.
         </p>
       </div>
@@ -692,17 +704,26 @@ export default function Home() {
           <button type="button" className="text-action" onClick={focusSettings}>
             Изменить запрос
           </button>
-          {!activeId && (
+          {activeId ? (
+            <span className="plan-done-mark">
+              <DoneCheck />
+              Сохранено
+            </span>
+          ) : (
             <button type="button" className="text-action" onClick={saveConversation}>
-              {savedFlash ? "Сохранено" : "Сохранить"}
+              Сохранить
             </button>
           )}
-          {activeId && (
-            <span className="plan-saved-mark">В сохранённых</span>
+          {copied ? (
+            <span className="plan-done-mark">
+              <DoneCheck />
+              Скопировано
+            </span>
+          ) : (
+            <button type="button" className="text-action" onClick={copyPlan}>
+              Копировать
+            </button>
           )}
-          <button type="button" className="text-action" onClick={copyPlan}>
-            {copied ? "Скопировано" : "Копировать"}
-          </button>
         </div>
 
         <aside className="rehearse-invite">
