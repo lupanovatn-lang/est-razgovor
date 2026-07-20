@@ -12,7 +12,7 @@ import {
   type PlanStep,
 } from "../lib/plans";
 
-type View = "compose" | "plan" | "rehearsal";
+type View = "compose" | "plan" | "rehearsal" | "saved";
 
 type ChatMessage = { role: "parent" | "child"; text: string };
 
@@ -96,7 +96,6 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
-  const [savedMenuOpen, setSavedMenuOpen] = useState(false);
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -133,24 +132,6 @@ export default function Home() {
     }, 1000);
     return () => window.clearInterval(id);
   }, [generating]);
-
-  useEffect(() => {
-    if (!savedMenuOpen) return;
-    const onPointer = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest(".header-saved")) return;
-      setSavedMenuOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSavedMenuOpen(false);
-    };
-    window.addEventListener("mousedown", onPointer);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("mousedown", onPointer);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [savedMenuOpen]);
 
   const resetNew = () => {
     setActiveId(null);
@@ -265,8 +246,27 @@ export default function Home() {
     setPlanWarning("");
     setOpenPlanStep("");
     setMessages([]);
-    setSavedMenuOpen(false);
     setView("plan");
+  };
+
+  const removeSaved = (id: string) => {
+    const next = savedList.filter((x) => x.id !== id);
+    setSavedList(next);
+    persistSaved(next);
+    if (activeId === id) setActiveId(null);
+  };
+
+  const formatSavedDate = (ts: number) => {
+    try {
+      return new Intl.DateTimeFormat("ru-RU", {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(ts));
+    } catch {
+      return "";
+    }
   };
 
   const copyPlan = async () => {
@@ -851,7 +851,55 @@ export default function Home() {
     );
   }
 
-  const showSettings = view !== "rehearsal";
+  function SavedPlansView() {
+    return (
+      <section className="saved-page">
+        <header className="saved-page-header">
+          <h1>Мои планы</h1>
+          <p>Сохранённые планы разговоров на этом устройстве</p>
+        </header>
+
+        {savedList.length === 0 ? (
+          <div className="saved-empty">
+            <p>Пока нет сохранённых планов.</p>
+            <button type="button" className="header-new" onClick={resetNew}>
+              <img src="/plus.svg" alt="" />
+              Новый план
+            </button>
+          </div>
+        ) : (
+          <ul className="saved-page-list">
+            {savedList.map((item) => (
+              <li key={item.id} className={activeId === item.id ? "active" : ""}>
+                <button
+                  type="button"
+                  className="saved-page-card"
+                  onClick={() => openSaved(item)}
+                >
+                  <span className="saved-page-meta">
+                    <span>{item.topic}</span>
+                    <span>{formatSavedDate(item.updatedAt)}</span>
+                  </span>
+                  <b>{item.title}</b>
+                  <small>{item.goalText || goalLabel(item.goalKind)}</small>
+                </button>
+                <button
+                  type="button"
+                  className="saved-page-remove"
+                  aria-label="Удалить план"
+                  onClick={() => removeSaved(item.id)}
+                >
+                  Удалить
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    );
+  }
+
+  const showSettings = view !== "rehearsal" && view !== "saved";
 
   return (
     <div className={showSettings ? "app-shell" : "app-shell rehearsal-mode"}>
@@ -864,36 +912,16 @@ export default function Home() {
           </span>
         </button>
         <div className="header-actions">
-          {savedList.length > 0 && (
-            <div className="header-saved">
-              <button
-                type="button"
-                className={savedMenuOpen ? "header-saved-btn open" : "header-saved-btn"}
-                aria-expanded={savedMenuOpen}
-                aria-haspopup="listbox"
-                onClick={() => setSavedMenuOpen((v) => !v)}
-              >
-                Мои планы
-                <span className="header-saved-count">{savedList.length}</span>
-              </button>
-              {savedMenuOpen && (
-                <ul className="header-saved-menu" role="listbox">
-                  {savedList.slice(0, 8).map((item) => (
-                    <li key={item.id} role="option" aria-selected={activeId === item.id}>
-                      <button
-                        type="button"
-                        className={activeId === item.id ? "saved-item active" : "saved-item"}
-                        onClick={() => openSaved(item)}
-                      >
-                        <b>{item.title}</b>
-                        <small>{item.goalText || item.topic}</small>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+          <button
+            type="button"
+            className={view === "saved" ? "header-saved-btn open" : "header-saved-btn"}
+            onClick={() => setView("saved")}
+          >
+            Мои планы
+            {savedList.length > 0 && (
+              <span className="header-saved-count">{savedList.length}</span>
+            )}
+          </button>
           <button type="button" className="header-new" onClick={resetNew}>
             <img src="/plus.svg" alt="" />
             Новый план
@@ -907,11 +935,13 @@ export default function Home() {
           <main>
             {view === "rehearsal"
               ? Rehearsal()
-              : generating
-                ? GeneratingState()
-                : view === "plan" && plan
-                  ? PlanView()
-                  : EmptyState()}
+              : view === "saved"
+                ? SavedPlansView()
+                : generating
+                  ? GeneratingState()
+                  : view === "plan" && plan
+                    ? PlanView()
+                    : EmptyState()}
           </main>
           <footer>
             <p>ИИ может ошибаться. В кризисной ситуации обратитесь к специалисту.</p>
