@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   deriveSituationGoal,
   goalLabel,
   goalOptions,
   isGenericGoalText,
-  suggestGoalKind,
   type ConversationPlan,
   type GoalKind,
   type PlanStep,
@@ -102,13 +101,12 @@ function persistSaved(items: SavedConversation[]) {
 
 export default function Home() {
   const [view, setView] = useState<View>("compose");
-  const [topic, setTopic] = useState("Гаджеты и интернет");
+  const [topic, setTopic] = useState("");
   const [age, setAge] = useState("");
   const [situation, setSituation] = useState("");
-  const [goalKind, setGoalKind] = useState<GoalKind>("agree");
+  const [goalKind, setGoalKind] = useState<GoalKind | "">("");
   const [goalText, setGoalText] = useState("");
-  const [goalTouched, setGoalTouched] = useState(false);
-  const [reaction, setReaction] = useState("Спорит и защищается");
+  const [reaction, setReaction] = useState("");
   const [plan, setPlan] = useState<ConversationPlan | null>(null);
   const [planSource, setPlanSource] = useState<"openai" | "fallback" | null>(null);
   const [planWarning, setPlanWarning] = useState("");
@@ -142,18 +140,9 @@ export default function Home() {
       age.trim() &&
       reaction.trim(),
   );
-  const suggested = useMemo(
-    () => suggestGoalKind(situation, topic),
-    [situation, topic],
-  );
-
   useEffect(() => {
     setSavedList(loadSaved());
   }, []);
-
-  useEffect(() => {
-    if (!goalTouched) setGoalKind(suggested);
-  }, [suggested, goalTouched]);
 
   useEffect(() => {
     if (!generating) {
@@ -179,13 +168,12 @@ export default function Home() {
     setActiveId(null);
     setOpenedFromLibrary(false);
     setParamsUnlocked(false);
-    setTopic("Гаджеты и интернет");
+    setTopic("");
     setAge("");
     setSituation("");
-    setGoalKind("agree");
+    setGoalKind("");
     setGoalText("");
-    setGoalTouched(false);
-    setReaction("Спорит и защищается");
+    setReaction("");
     setPlan(null);
     setPlanSource(null);
     setPlanWarning("");
@@ -204,14 +192,14 @@ export default function Home() {
   };
 
   const selectGoal = (kind: GoalKind) => {
-    setGoalTouched(true);
     setGoalKind(kind);
     // Don't copy the base goal label into the custom field.
     if (isGenericGoalText(goalText)) setGoalText("");
   };
 
   const resolvedGoal =
-    plan?.goal || deriveSituationGoal(situation, goalKind, goalText);
+    plan?.goal ||
+    (goalKind ? deriveSituationGoal(situation, goalKind, goalText) : goalText.trim());
   const paramsLocked = openedFromLibrary && !paramsUnlocked;
 
   const requestUnlockParams = () => {
@@ -226,13 +214,19 @@ export default function Home() {
   const generatePlan = async () => {
     if (paramsLocked) return;
     setFormAttempted(true);
-    if (!formValid) {
+    if (!formValid || !goalKind) {
       setPlanError("Заполните обязательные поля со звёздочкой");
-      const missing = !situation.trim()
-        ? "situation"
-        : !age.trim()
-          ? "age"
-          : null;
+      const missing = !topic.trim()
+        ? "topic"
+        : !situation.trim()
+          ? "situation"
+          : !goalKind
+            ? "goalKind"
+            : !age.trim()
+              ? "age"
+              : !reaction.trim()
+                ? "reaction"
+                : null;
       if (missing) {
         window.setTimeout(() => {
           document.getElementById(missing)?.focus();
@@ -300,7 +294,7 @@ export default function Home() {
   };
 
   const saveConversation = () => {
-    if (!plan) return;
+    if (!plan || !goalKind) return;
     const item: SavedConversation = {
       id: activeId || crypto.randomUUID(),
       title: plan.title,
@@ -328,7 +322,6 @@ export default function Home() {
     setSituation(item.situation);
     setGoalKind(item.goalKind);
     setGoalText(item.goalText);
-    setGoalTouched(true);
     setAge(item.age);
     setReaction(item.reaction);
     setPlan(item.plan);
@@ -485,11 +478,11 @@ export default function Home() {
               id="topic"
               value={topic}
               required
-              onChange={(e) => {
-                setTopic(e.target.value);
-                setGoalTouched(false);
-              }}
+              onChange={(e) => setTopic(e.target.value)}
             >
+              <option value="" disabled>
+                Выберите тему
+              </option>
               {topics.map((t) => (
                 <option key={t} value={t}>
                   {t}
@@ -513,7 +506,6 @@ export default function Home() {
             aria-required="true"
             onChange={(e) => {
               setSituation(e.target.value);
-              setGoalTouched(false);
               if (planError) setPlanError("");
             }}
             rows={4}
@@ -533,6 +525,9 @@ export default function Home() {
               required
               onChange={(e) => selectGoal(e.target.value as GoalKind)}
             >
+              <option value="" disabled>
+                Выберите цель
+              </option>
               {goalOptions.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.label}
@@ -540,11 +535,6 @@ export default function Home() {
               ))}
             </select>
           </div>
-          {!paramsLocked && !goalTouched && situation.trim() && (
-            <p className="settings-hint">
-              Предложили по описанию: {goalLabel(suggested)}. Можно изменить.
-            </p>
-          )}
 
           <label className="field-label" htmlFor="goal">
             Результат своими словами
@@ -598,6 +588,9 @@ export default function Home() {
               required
               onChange={(e) => setReaction(e.target.value)}
             >
+              <option value="" disabled>
+                Выберите реакцию
+              </option>
               {reactions.map((r) => (
                 <option key={r} value={r}>
                   {r}
@@ -722,7 +715,7 @@ export default function Home() {
           <h1>{plan.title}</h1>
           <div className="goal-badge">
             <span className="goal-badge-icon">
-              <GoalIcon kind={goalKind} />
+              <GoalIcon kind={goalKind || "other"} />
             </span>
             <span>
               <span className="goal-badge-label">Цель разговора</span>
