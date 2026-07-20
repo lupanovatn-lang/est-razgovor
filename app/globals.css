@@ -187,9 +187,24 @@ button { color: inherit; }
 }
 .settings-lead { margin: 0 0 20px; color: #7c8099; font-size: 13px; line-height: 1.5; }
 .field-label { display: block; margin: 14px 0 7px; color: #3f435a; font-size: 12px; font-weight: 600; }
+.field-req {
+  color: #d2555a;
+  font-weight: 700;
+}
+.field-error {
+  margin: 6px 0 0;
+  color: #c24b52;
+  font-size: 11px;
+  font-weight: 600;
+}
 .settings-input, .select-wrap select { width: 100%; border: 1px solid #e0e2ef; background: #fbfbff; border-radius: 11px; outline: none; color: var(--ink); }
 .settings-input { padding: 11px 12px; resize: vertical; line-height: 1.45; font-size: 13px; }
 .settings-input:focus, .select-wrap select:focus { border-color: #8c83f7; box-shadow: 0 0 0 3px rgba(99, 86, 246, .1); background: #fff; }
+.settings-input.invalid {
+  border-color: #e8a3a6;
+  background: #fff7f7;
+  box-shadow: 0 0 0 3px rgba(194, 75, 82, .08);
+}
 .select-wrap { position: relative; }
 .select-wrap select { appearance: none; padding: 11px 36px 11px 12px; font-size: 13px; cursor: pointer; }
 .select-wrap:after { content: ""; position: absolute; right: 14px; top: 50%; width: 7px; height: 7px; border-right: 1.5px solid #8a8eaa; border-bottom: 1.5px solid #8a8eaa; transform: translateY(-60%) rotate(45deg); pointer-events: none; }

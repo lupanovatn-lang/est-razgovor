@@ -131,8 +131,16 @@ export default function Home() {
   const [rehearseError, setRehearseError] = useState("");
   const [statusIndex, setStatusIndex] = useState(0);
   const [waitTick, setWaitTick] = useState(0);
+  const [formAttempted, setFormAttempted] = useState(false);
 
   const childName = age ? `${age} лет` : "ребёнок";
+  const formValid = Boolean(
+    topic.trim() &&
+      situation.trim() &&
+      goalKind &&
+      age.trim() &&
+      reaction.trim(),
+  );
   const suggested = useMemo(
     () => suggestGoalKind(situation, topic),
     [situation, topic],
@@ -190,6 +198,7 @@ export default function Home() {
     setTryPhrase("");
     setRehearseError("");
     setCopied(false);
+    setFormAttempted(false);
     setView("compose");
   };
 
@@ -215,8 +224,9 @@ export default function Home() {
 
   const generatePlan = async () => {
     if (paramsLocked) return;
-    if (!situation.trim()) {
-      setPlanError("Опишите ситуацию");
+    setFormAttempted(true);
+    if (!situation.trim() || !age.trim() || !topic.trim() || !reaction.trim()) {
+      setPlanError("Заполните обязательные поля: ситуация и возраст");
       return;
     }
     setGenerating(true);
@@ -247,6 +257,7 @@ export default function Home() {
         setGoalText(nextPlan.goal);
       }
       setOpenPlanStep("");
+      setFormAttempted(false);
       setMoreReactions({});
       setCopied(false);
       if (activeId) {
@@ -445,12 +456,13 @@ export default function Home() {
 
           <fieldset className="settings-fields" disabled={paramsLocked}>
           <label className="field-label" htmlFor="topic">
-            Тема
+            Тема <span className="field-req">*</span>
           </label>
           <div className="select-wrap">
             <select
               id="topic"
               value={topic}
+              required
               onChange={(e) => {
                 setTopic(e.target.value);
                 setGoalTouched(false);
@@ -465,27 +477,38 @@ export default function Home() {
           </div>
 
           <label className="field-label" htmlFor="situation">
-            Что случилось?
+            Что случилось? <span className="field-req">*</span>
           </label>
           <textarea
             id="situation"
-            className="settings-input"
+            className={
+              formAttempted && !situation.trim()
+                ? "settings-input invalid"
+                : "settings-input"
+            }
             value={situation}
+            required
+            aria-required="true"
             onChange={(e) => {
               setSituation(e.target.value);
               setGoalTouched(false);
+              if (planError) setPlanError("");
             }}
             rows={4}
             placeholder="Кратко опишите ситуацию"
           />
+          {formAttempted && !situation.trim() && (
+            <p className="field-error">Обязательное поле</p>
+          )}
 
           <label className="field-label" htmlFor="goalKind">
-            Цель разговора
+            Цель разговора <span className="field-req">*</span>
           </label>
           <div className="select-wrap">
             <select
               id="goalKind"
               value={goalKind}
+              required
               onChange={(e) => selectGoal(e.target.value as GoalKind)}
             >
               {goalOptions.map((g) => (
@@ -516,28 +539,41 @@ export default function Home() {
           <div className="settings-row">
             <div>
               <label className="field-label" htmlFor="age">
-                Возраст
+                Возраст <span className="field-req">*</span>
               </label>
               <div className="age-row compact">
                 <input
                   id="age"
-                  className="age settings-input"
+                  className={
+                    formAttempted && !age.trim()
+                      ? "age settings-input invalid"
+                      : "age settings-input"
+                  }
                   value={age}
-                  onChange={(e) => setAge(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  required
+                  aria-required="true"
+                  onChange={(e) => {
+                    setAge(e.target.value.replace(/\D/g, "").slice(0, 2));
+                    if (planError) setPlanError("");
+                  }}
                   placeholder="13"
                 />
                 <span>лет</span>
               </div>
+              {formAttempted && !age.trim() && (
+                <p className="field-error">Обязательное поле</p>
+              )}
             </div>
           </div>
 
           <label className="field-label" htmlFor="reaction">
-            Как обычно реагирует
+            Как обычно реагирует <span className="field-req">*</span>
           </label>
           <div className="select-wrap">
             <select
               id="reaction"
               value={reaction}
+              required
               onChange={(e) => setReaction(e.target.value)}
             >
               {reactions.map((r) => (
@@ -565,7 +601,7 @@ export default function Home() {
             <button
               type="button"
               className="generate-btn"
-              disabled={generating || !situation.trim()}
+              disabled={generating}
               onClick={() => void generatePlan()}
             >
               {generating
@@ -578,7 +614,7 @@ export default function Home() {
           <p className="settings-privacy">
             {paramsLocked
               ? "Сначала подтвердите изменение, потом сможете обновить план"
-              : "Описание используется только для составления плана"}
+              : "Поля со звёздочкой обязательны · описание только для плана"}
           </p>
         </div>
       </aside>
