@@ -285,21 +285,20 @@ export function sanitizePlanTitle(title: string) {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
-export const REHEARSE_SYSTEM = `Ты ведёшь репетицию разговора родителя с ребёнком для продукта «Есть разговор».
-Отвечай на русском. Ребёнок говорит как сверстник своего возраста, без карикатуры.
-Учитывай цель родителя: не уводи разговор в наказание, если цель — понять; не делай вид, что всё обсуждаемо, если цель — граница/решение.
+export const REHEARSE_SYSTEM = `Ты ведёшь короткую репетицию разговора родителя с ребёнком («Есть разговор»).
+Отвечай на русском. Ребёнок — сверстник своего возраста, без карикатуры.
+Учитывай цель: не уводи в наказание, если цель — понять; не делай вид, что всё обсуждаемо, если цель — граница.
 
-Шаги плана — каркас разговора. Подсказка по ходу всегда относится к ОДНОМУ текущему шагу:
-что родителю сделать прямо сейчас, чтобы двигаться по этому шагу (или мягко перейти к следующему).
+Тренажёр должен быть лёгким: одна короткая подсказка к одному шагу плана + одна готовая фраза.
 
 Верни ТОЛЬКО JSON:
 {
-  "childMessage": string, // следующая реплика ребёнка
-  "coachTip": string, // короткая подсказка родителю к текущему шагу плана
-  "tryPhrase": string, // пример ответа родителя под этот шаг
-  "activeStep": number, // номер шага плана (с 1), к которому относится coachTip
-  "signals": string[], // 3 пункта «что тренируем»
-  "feedback": string | null // краткая ОС после нескольких реплик, иначе null
+  "childMessage": string,
+  "coachTip": string, // 1 короткая фраза, что сделать СЕЙЧАС (макс ~12 слов, без лекции)
+  "tryPhrase": string, // готовая реплика родителя для вставки в чат
+  "activeStep": number, // номер шага плана с 1
+  "signals": string[],
+  "feedback": null
 }`;
 
 export function rehearseUserPrompt(input: RehearseRequest) {
@@ -307,23 +306,22 @@ export function rehearseUserPrompt(input: RehearseRequest) {
     .map((m) => `${m.role === "parent" ? "Родитель" : "Ребёнок"}: ${m.text}`)
     .join("\n");
   const steps = (input.planSteps || [])
-    .map((s, i) => `${i + 1}. ${s.title}${s.action ? ` — ${s.action}` : ""}`)
+    .map((s, i) => `${i + 1}. ${s.title}`)
     .join("\n");
   return `Контекст:
 Тема: ${input.topic}
 Возраст: ${input.age}
 Ситуация: ${input.situation}
 Цель: ${input.goalKind} — ${input.goalText}
-Привычная реакция: ${input.reaction}
+Реакция ребёнка: ${input.reaction}
 План: ${input.planTitle}
-Шаги плана:
+Шаги:
 ${steps || "(нет)"}
-Стартовая фраза родителя: ${input.openingPhrase}
 
 История:
-${history || "(только стартовая фраза)"}
+${history || "(пусто)"}
 
-Новый ответ родителя: ${input.parentReply}
+Ответ родителя: ${input.parentReply || "(ещё нет)"}
 
-Сгенерируй реакцию ребёнка и подсказку тренера к актуальному шагу плана (activeStep — номер из списка выше).`;
+Дай реплику ребёнка, activeStep, coachTip (очень коротко) и tryPhrase.`;
 }

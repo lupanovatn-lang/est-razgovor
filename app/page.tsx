@@ -129,8 +129,6 @@ export default function Home() {
   const [coachTip, setCoachTip] = useState("");
   const [coachActiveStep, setCoachActiveStep] = useState<number | null>(null);
   const [tryPhrase, setTryPhrase] = useState("");
-  const [signals, setSignals] = useState<string[]>([]);
-  const [feedback, setFeedback] = useState("");
   const [rehearseLoading, setRehearseLoading] = useState(false);
   const [rehearseError, setRehearseError] = useState("");
   const [statusIndex, setStatusIndex] = useState(0);
@@ -194,8 +192,6 @@ export default function Home() {
     setDoneCoachSteps([]);
     setOpenCoachStep(-1);
     setTryPhrase("");
-    setSignals([]);
-    setFeedback("");
     setRehearseError("");
     setCopied(false);
     setView("compose");
@@ -386,8 +382,6 @@ export default function Home() {
     setCoachActiveStep(null);
     setDoneCoachSteps([]);
     setTryPhrase("");
-    setSignals([]);
-    setFeedback("");
     setOpenCoachStep(-1);
   };
 
@@ -458,7 +452,6 @@ export default function Home() {
         });
       }
       setTryPhrase(data.tryPhrase || "");
-      setFeedback(data.feedback || "");
     } catch (e) {
       setRehearseError(e instanceof Error ? e.message : "Ошибка репетиции");
     } finally {
@@ -966,195 +959,153 @@ export default function Home() {
             <div className="composer-note">Enter — отправить · Здесь нет идеальных ответов</div>
           </div>
           <aside className="coach-card">
-            <div className="coach-title">
-              <span>✦</span>
-              <div>
-                <b>Задание по плану</b>
-                <small>
-                  {(() => {
-                    const total = plan?.steps.length ?? 0;
-                    const doneCount = doneCoachSteps.filter(
-                      (i) => i >= 0 && i < total,
-                    ).length;
-                    return `${doneCount} из ${total} шагов`;
-                  })()}
-                </small>
-              </div>
-            </div>
+            {(() => {
+              const steps = plan?.steps ?? [];
+              const total = steps.length;
+              const doneCount = doneCoachSteps.filter((i) => i >= 0 && i < total).length;
+              const focusIndex =
+                coachActiveStep != null && coachActiveStep >= 1
+                  ? coachActiveStep - 1
+                  : steps.findIndex((_, i) => !doneCoachSteps.includes(i));
+              const focusStep = focusIndex >= 0 ? steps[focusIndex] : undefined;
+              const tipText =
+                coachTip ||
+                (messages.length === 0 && focusStep
+                  ? "Начните своими словами или возьмите фразу"
+                  : "");
+              const tipPhrase =
+                tryPhrase ||
+                (messages.length === 0 ? focusStep?.phrase || "" : "");
+              const showFocus = !!(tipText || tipPhrase) && !!focusStep;
 
-            {coachTip && messages.length > 0 && (
-              <div className="coach-live">
-                <span>
-                  {coachActiveStep
-                    ? `Сейчас · шаг ${coachActiveStep}`
-                    : "Подсказка по ходу"}
-                </span>
-                {coachActiveStep && plan?.steps[coachActiveStep - 1] && (
-                  <p className="coach-live-step">
-                    {plan.steps[coachActiveStep - 1].title}
-                  </p>
-                )}
-                <p>{coachTip}</p>
-                <div className="coach-live-actions">
-                  {tryPhrase && (
-                    <button
-                      type="button"
-                      className="coach-live-secondary"
-                      disabled={rehearseLoading}
-                      onClick={() => setReply(tryPhrase)}
-                    >
-                      Вставить фразу
-                    </button>
-                  )}
-                  {coachActiveStep != null &&
-                    !doneCoachSteps.includes(coachActiveStep - 1) && (
-                      <button
-                        type="button"
-                        className="coach-live-primary"
-                        onClick={() => markCoachStepDone(coachActiveStep - 1)}
-                      >
-                        ✓ Шаг сделан
-                      </button>
-                    )}
-                </div>
-                {feedback && <p className="coach-live-note">{feedback}</p>}
-              </div>
-            )}
-
-            <div className="coach-steps">
-              {(plan?.steps ?? []).map((step, i) => {
-                const open = openCoachStep === i;
-                const done = doneCoachSteps.includes(i);
-                const current = !done && coachActiveStep === i + 1;
-                const hasHints =
-                  !!step.action ||
-                  !!step.why ||
-                  !!step.phrase ||
-                  !!(step.questions && step.questions.length) ||
-                  !!step.avoid;
-                return (
-                  <article
-                    key={`${step.title}-${i}`}
-                    className={[
-                      "coach-step",
-                      open ? "open" : "",
-                      done ? "done" : "",
-                      current ? "current" : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    <div className="coach-step-row">
-                      <button
-                        type="button"
-                        className={done ? "coach-check done" : "coach-check"}
-                        aria-pressed={done}
-                        aria-label={
-                          done
-                            ? `Шаг ${i + 1} сделан — снять отметку`
-                            : `Отметить шаг ${i + 1} сделанным`
-                        }
-                        onClick={() =>
-                          done ? toggleCoachStepDone(i) : markCoachStepDone(i)
-                        }
-                      >
-                        {done ? (
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-                            <path
-                              d="M2.5 6.2 4.8 8.5 9.5 3.5"
-                              stroke="currentColor"
-                              strokeWidth="1.8"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        ) : (
-                          <span aria-hidden="true">{i + 1}</span>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        className="coach-step-head"
-                        aria-expanded={open}
-                        onClick={() => setOpenCoachStep(open ? -1 : i)}
-                      >
-                        <b>{step.title}</b>
-                        <span className="coach-step-toggle">
-                          {open
-                            ? "Свернуть"
-                            : current
-                              ? "Сейчас"
-                              : hasHints
-                                ? "Фразы"
-                                : ""}
-                        </span>
-                      </button>
+              return (
+                <>
+                  <div className="coach-title">
+                    <div>
+                      <b>Тренажёр</b>
+                      <small>
+                        {doneCount} / {total}
+                      </small>
                     </div>
-                    {open && (
-                      <div className="coach-step-body">
-                        {(step.action || step.why) && (
-                          <div className="coach-block">
-                            <span>Что сделать</span>
-                            <p>{step.action || step.why}</p>
-                          </div>
-                        )}
-                        {step.phrase && (
-                          <div className="try">
-                            <span>Фраза</span>
-                            <p>«{step.phrase}»</p>
+                  </div>
+
+                  {showFocus && (
+                    <div className="coach-now">
+                      <div className="coach-now-top">
+                        <span>Сейчас</span>
+                        <span className="coach-now-n">Шаг {focusIndex + 1}</span>
+                      </div>
+                      <p className="coach-now-title">{focusStep?.title}</p>
+                      {tipText ? <p className="coach-now-tip">{tipText}</p> : null}
+                      {tipPhrase ? (
+                        <button
+                          type="button"
+                          className="coach-now-phrase"
+                          disabled={rehearseLoading}
+                          onClick={() => setReply(tipPhrase)}
+                        >
+                          <span>«{tipPhrase}»</span>
+                          <em>В чат</em>
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
+
+                  <div className="coach-steps">
+                    {steps.map((step, i) => {
+                      const open = openCoachStep === i;
+                      const done = doneCoachSteps.includes(i);
+                      const current = !done && i === focusIndex;
+                      const phrase = step.phrase?.trim() || "";
+                      const avoid = step.avoid?.trim() || "";
+                      const alt = (step.questions || []).filter(Boolean).slice(0, 1);
+                      const hasHelp = !!(phrase || avoid || alt.length);
+                      return (
+                        <article
+                          key={`${step.title}-${i}`}
+                          className={[
+                            "coach-step",
+                            open ? "open" : "",
+                            done ? "done" : "",
+                            current ? "current" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                        >
+                          <div className="coach-step-row">
                             <button
                               type="button"
-                              className="text-action"
-                              disabled={rehearseLoading}
-                              onClick={() => setReply(step.phrase || "")}
+                              className={done ? "coach-check done" : "coach-check"}
+                              aria-pressed={done}
+                              aria-label={
+                                done
+                                  ? `Шаг ${i + 1} сделан — снять`
+                                  : `Отметить шаг ${i + 1}`
+                              }
+                              onClick={() =>
+                                done ? toggleCoachStepDone(i) : markCoachStepDone(i)
+                              }
                             >
-                              Вставить
+                              {done ? (
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                  <path
+                                    d="M2.5 6.2 4.8 8.5 9.5 3.5"
+                                    stroke="currentColor"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              ) : (
+                                <span aria-hidden="true">{i + 1}</span>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="coach-step-head"
+                              aria-expanded={open}
+                              onClick={() => setOpenCoachStep(open ? -1 : i)}
+                            >
+                              <b>{step.title}</b>
+                              <span className="coach-step-toggle">
+                                {open ? "−" : hasHelp ? "+" : ""}
+                              </span>
                             </button>
                           </div>
-                        )}
-                        {step.questions && step.questions.length > 0 && (
-                          <div className="coach-questions">
-                            <span>Вопросы</span>
-                            <ul>
-                              {step.questions.map((q) => (
-                                <li key={q}>
-                                  <button
-                                    type="button"
-                                    className="coach-question"
-                                    disabled={rehearseLoading}
-                                    onClick={() => setReply(q)}
-                                  >
-                                    {q}
-                                  </button>
-                                </li>
+                          {open && hasHelp ? (
+                            <div className="coach-step-body">
+                              {phrase ? (
+                                <button
+                                  type="button"
+                                  className="coach-now-phrase nested"
+                                  disabled={rehearseLoading}
+                                  onClick={() => setReply(phrase)}
+                                >
+                                  <span>«{phrase}»</span>
+                                  <em>В чат</em>
+                                </button>
+                              ) : null}
+                              {alt.map((q) => (
+                                <button
+                                  key={q}
+                                  type="button"
+                                  className="coach-alt-phrase"
+                                  disabled={rehearseLoading}
+                                  onClick={() => setReply(q)}
+                                >
+                                  {q}
+                                </button>
                               ))}
-                            </ul>
-                          </div>
-                        )}
-                        {step.avoid && (
-                          <div className="feedback">
-                            <b>Не стоит</b>
-                            <p>{step.avoid}</p>
-                          </div>
-                        )}
-                        {!hasHints && (
-                          <p>Сформулируйте этот шаг своими словами.</p>
-                        )}
-                        {!done && (
-                          <button
-                            type="button"
-                            className="coach-mark-btn"
-                            onClick={() => markCoachStepDone(i)}
-                          >
-                            ✓ Шаг сделан
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
+                              {avoid ? <p className="coach-avoid">Не: {avoid}</p> : null}
+                            </div>
+                          ) : null}
+                        </article>
+                      );
+                    })}
+                  </div>
+                </>
+              );
+            })()}
           </aside>
         </div>
       </section>
