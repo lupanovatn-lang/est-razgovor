@@ -176,14 +176,14 @@ export default function Home() {
   const requestUnlockParams = () => {
     if (!paramsLocked) return true;
     const ok = window.confirm(
-      "Вы уверены, что хотите изменить параметры и обновить план?",
+      "Вы уверены, что хотите изменить параметры сохранённого плана?",
     );
     if (ok) setParamsUnlocked(true);
     return ok;
   };
 
   const generatePlan = async () => {
-    if (paramsLocked && !requestUnlockParams()) return;
+    if (paramsLocked) return;
     if (!situation.trim()) {
       setPlanError("Опишите ситуацию");
       return;
@@ -217,6 +217,7 @@ export default function Home() {
       }
       setOpenPlanStep("");
       setMoreReactions({});
+      if (activeId) setParamsUnlocked(false);
       setView("plan");
     } catch (e) {
       setPlanError(e instanceof Error ? e.message : "Ошибка генерации");
@@ -399,10 +400,14 @@ export default function Home() {
               <div>
                 <p>Сохранённый план — параметры заблокированы</p>
                 <button type="button" className="text-action" onClick={requestUnlockParams}>
-                  Изменить и обновить план
+                  Изменить параметры
                 </button>
               </div>
             </div>
+          ) : activeId ? (
+            <p className="settings-lead">
+              Измените параметры, затем нажмите «Обновить план».
+            </p>
           ) : (
             <p className="settings-lead">
               Опишите ситуацию и цель — справа появится план.
@@ -519,22 +524,32 @@ export default function Home() {
         </div>
 
         <div className="settings-footer">
-          <button
-            type="button"
-            className="generate-btn"
-            disabled={generating || !situation.trim()}
-            onClick={() => void generatePlan()}
-          >
-            {generating
-              ? "Составляем…"
-              : paramsLocked
-                ? "Обновить план"
+          {paramsLocked ? (
+            <button
+              type="button"
+              className="generate-btn locked-action"
+              onClick={requestUnlockParams}
+            >
+              Изменить параметры
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="generate-btn"
+              disabled={generating || !situation.trim()}
+              onClick={() => void generatePlan()}
+            >
+              {generating
+                ? "Составляем…"
                 : plan
                   ? "Обновить план"
                   : "+ Составить план"}
-          </button>
+            </button>
+          )}
           <p className="settings-privacy">
-            Описание используется только для составления плана
+            {paramsLocked
+              ? "Сначала подтвердите изменение, потом сможете обновить план"
+              : "Описание используется только для составления плана"}
           </p>
         </div>
       </aside>
