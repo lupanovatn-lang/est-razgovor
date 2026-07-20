@@ -595,23 +595,20 @@ export default function Home() {
   }
 
   function GeneratingState() {
-    const progress = ((statusIndex + 1) / GENERATING_STATUSES.length) * 100;
-    const skeletonCount = Math.min(4, statusIndex + 2);
+    const skeletonCount = Math.min(4, statusIndex + 1);
+    const activeLabel = GENERATING_STATUSES[statusIndex];
 
     return (
       <div className="generating-wrap" aria-live="polite" aria-busy="true">
         <aside className="generating-card">
-          <div className="generating-kicker">Идёт подготовка</div>
-          <h1>Составляем план</h1>
-          <p className="generating-context">
-            {topic}
-            {goalText || goalLabel(goalKind) ? ` · ${goalText || goalLabel(goalKind)}` : ""}
-          </p>
-
-          <div className="generating-progress" aria-hidden="true">
-            <i style={{ width: `${progress}%` }} />
+          <div className="goal-badge compact">
+            <span className="goal-badge-icon">
+              <GoalIcon kind={goalKind} />
+            </span>
+            <span>{goalText || goalLabel(goalKind)}</span>
           </div>
-          <p className="generating-current">{GENERATING_STATUSES[statusIndex]}…</p>
+          <h1>Составляем план</h1>
+          <p className="generating-current">{activeLabel}…</p>
 
           <ul className="generating-statuses">
             {GENERATING_STATUSES.map((label, i) => {
@@ -619,7 +616,23 @@ export default function Home() {
               const active = i === statusIndex;
               return (
                 <li key={label} className={done ? "done" : active ? "active" : ""}>
-                  <span className="status-dot" aria-hidden="true" />
+                  <span className="status-mark" aria-hidden="true">
+                    {done ? (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path
+                          d="M3 7.2 5.8 10 11 3.8"
+                          stroke="currentColor"
+                          strokeWidth="1.7"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    ) : active ? (
+                      <i className="status-pulse" />
+                    ) : (
+                      <i className="status-idle" />
+                    )}
+                  </span>
                   {label}
                 </li>
               );
@@ -628,22 +641,26 @@ export default function Home() {
         </aside>
 
         <div className="generating-preview" aria-hidden="true">
-          <div className="skeleton-title shimmer" />
-          <div className="skeleton-line shimmer short" />
-          <div className="skeleton-plan">
-            {Array.from({ length: 4 }, (_, i) => (
-              <div
-                key={i}
-                className={i < skeletonCount ? "skeleton-step on" : "skeleton-step"}
-              >
-                <span className="skeleton-num">{i + 1}</span>
-                <div className="skeleton-copy">
-                  <div className="skeleton-line shimmer" />
-                  <div className="skeleton-line shimmer short" />
-                </div>
-              </div>
-            ))}
+          <div className="skeleton-head">
+            <div className="skeleton-badge shimmer" />
+            <div className="skeleton-title shimmer" />
           </div>
+          <div className="skeleton-plan">
+            {Array.from({ length: 4 }, (_, i) => {
+              const state =
+                i < skeletonCount - 1 ? "done" : i === skeletonCount - 1 ? "writing" : "wait";
+              return (
+                <div key={i} className={`skeleton-step ${state}`}>
+                  <span className="skeleton-num">{i + 1}</span>
+                  <div className="skeleton-copy">
+                    <div className="skeleton-line shimmer" />
+                    <div className="skeleton-line shimmer short" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="skeleton-caption">Черновик плана собирается на глазах</p>
         </div>
       </div>
     );
