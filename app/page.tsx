@@ -121,11 +121,12 @@ export default function Home() {
   const [paramsUnlocked, setParamsUnlocked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
-  const [openCoachStep, setOpenCoachStep] = useState(0);
+  const [openCoachStep, setOpenCoachStep] = useState(-1);
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [coachTip, setCoachTip] = useState("");
+  const [coachActiveStep, setCoachActiveStep] = useState<number | null>(null);
   const [tryPhrase, setTryPhrase] = useState("");
   const [signals, setSignals] = useState<string[]>([]);
   const [feedback, setFeedback] = useState("");
@@ -378,10 +379,11 @@ export default function Home() {
     setRehearseError("");
     setRehearseLoading(false);
     setCoachTip("");
+    setCoachActiveStep(null);
     setTryPhrase("");
     setSignals([]);
     setFeedback("");
-    setOpenCoachStep(0);
+    setOpenCoachStep(-1);
   };
 
   const sendReply = async () => {
@@ -404,6 +406,10 @@ export default function Home() {
           age,
           reaction,
           planTitle: plan.title,
+          planSteps: plan.steps.map((s) => ({
+            title: s.title,
+            action: s.action || s.why,
+          })),
           openingPhrase,
           messages: nextHistory,
           parentReply: parentText,
@@ -412,8 +418,13 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось получить ответ");
       setMessages([...nextHistory, { role: "child", text: data.childMessage }]);
-      // Live tip only — plan steps stay as the main coach structure.
+      // Live tip points at one plan step; steps stay collapsed until opened.
       setCoachTip(data.coachTip || "");
+      setCoachActiveStep(
+        typeof data.activeStep === "number" && data.activeStep >= 1
+          ? data.activeStep
+          : null,
+      );
       setTryPhrase(data.tryPhrase || "");
       setFeedback(data.feedback || "");
     } catch (e) {
@@ -932,13 +943,22 @@ export default function Home() {
             </div>
 
             <p className="coach-brief">
-              Сформулируйте разговор по шагам ниже. Нужна помощь — откройте шаг:
-              там фразы и вопросы из плана.
+              Шаги — каркас разговора (закрыты, откройте «Помощь» при необходимости).
+              Подсказка по ходу говорит, к какому шагу идти прямо сейчас.
             </p>
 
             {coachTip && messages.length > 0 && (
               <div className="coach-live">
-                <span>Подсказка по ходу</span>
+                <span>
+                  {coachActiveStep
+                    ? `Подсказка к шагу ${coachActiveStep}`
+                    : "Подсказка по ходу"}
+                </span>
+                {coachActiveStep && plan?.steps[coachActiveStep - 1] && (
+                  <p className="coach-live-step">
+                    {plan.steps[coachActiveStep - 1].title}
+                  </p>
+                )}
                 <p>{coachTip}</p>
                 {tryPhrase && (
                   <button
@@ -950,6 +970,15 @@ export default function Home() {
                     Вставить фразу
                   </button>
                 )}
+                {coachActiveStep != null && (
+                  <button
+                    type="button"
+                    className="text-action"
+                    onClick={() => setOpenCoachStep(coachActiveStep - 1)}
+                  >
+                    Открыть шаг {coachActiveStep}
+                  </button>
+                )}
                 {feedback && <p className="coach-live-note">{feedback}</p>}
               </div>
             )}
@@ -958,6 +987,7 @@ export default function Home() {
             <div className="coach-steps">
               {(plan?.steps ?? []).map((step, i) => {
                 const open = openCoachStep === i;
+                const current = coachActiveStep === i + 1;
                 const hasHints =
                   !!step.action ||
                   !!step.why ||
@@ -965,7 +995,16 @@ export default function Home() {
                   !!(step.questions && step.questions.length) ||
                   !!step.avoid;
                 return (
-                  <article key={`${step.title}-${i}`} className={open ? "coach-step open" : "coach-step"}>
+                  <article
+                    key={`${step.title}-${i}`}
+                    className={[
+                      "coach-step",
+                      open ? "open" : "",
+                      current ? "current" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
                     <button
                       type="button"
                       className="coach-step-head"
@@ -975,7 +1014,7 @@ export default function Home() {
                       <span className="coach-step-num">{i + 1}</span>
                       <b>{step.title}</b>
                       <span className="coach-step-toggle">
-                        {open ? "Свернуть" : hasHints ? "Помощь" : ""}
+                        {open ? "Свернуть" : current ? "Сейчас" : hasHints ? "Помощь" : ""}
                       </span>
                     </button>
                     {open && (

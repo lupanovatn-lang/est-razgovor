@@ -654,9 +654,16 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   letter-spacing: .06em;
   text-transform: uppercase;
 }
+.coach-live-step {
+  margin: 4px 0 0 !important;
+  color: #5a5e78 !important;
+  font-size: 11px !important;
+  font-weight: 650;
+  line-height: 1.35 !important;
+}
 .coach-live p { margin: 6px 0 0; color: #42455e; font-size: 12px; line-height: 1.5; }
 .coach-live-note { margin-top: 8px !important; color: #6d718a !important; }
-.coach-live .text-action { margin-top: 8px; padding: 0; font-size: 12px; }
+.coach-live .text-action { margin-top: 8px; margin-right: 12px; padding: 0; font-size: 12px; }
 .coach-steps { display: grid; gap: 6px; }
 .coach-step {
   border: 1px solid #e5e6f3;
@@ -668,6 +675,18 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   border-color: #cfcaf8;
   background: #fbfbff;
   box-shadow: 0 0 0 3px rgba(98, 87, 233, .06);
+}
+.coach-step.current:not(.open) {
+  border-color: #c8c4f4;
+  background: #f7f7fd;
+}
+.coach-step.current .coach-step-num {
+  background: #e7e4ff;
+  color: #5045ce;
+}
+.coach-step.current .coach-step-toggle {
+  color: #655aef;
+  font-weight: 700;
 }
 .coach-step-head {
   width: 100%;
