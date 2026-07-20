@@ -150,10 +150,42 @@ button { color: inherit; }
 }
 
 .prep-banner { display: none; }
-.goal-badge { display: inline-flex; align-items: center; gap: 12px; max-width: min(640px, 100%); margin: 14px 0 0; padding: 0; border-radius: 0; background: transparent; color: #3a3d55; font-size: 17px; font-weight: 600; line-height: 1.35; letter-spacing: -.015em; }
-.goal-badge-icon { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #eef0ff; color: #6257e9; flex: 0 0 auto; }
+.goal-badge {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: min(560px, 100%);
+  margin: 22px 0 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #5a5e76;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -.01em;
+}
+.goal-badge-icon {
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #eef0ff;
+  color: #6257e9;
+  flex: 0 0 auto;
+}
 .goal-badge > span:last-child { min-width: 0; }
-.goal-badge-label { display: block; margin-bottom: 2px; color: #8a8eaa; font-size: 11px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.goal-badge-label {
+  display: block;
+  margin-bottom: 4px;
+  color: #9aa0b8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
 .plan-goal { display: none; }
 .plan-bottom-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
 .plan-bottom-actions .rehearse-button { width: auto; margin-top: 0; margin-left: auto; min-width: 160px; }
@@ -295,8 +327,8 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .rehearse-cta button { border: 0; border-radius: 9px; background: white; padding: 11px 15px; color: #554ad8; font-size: 11px; font-weight: 700; cursor: pointer; }
 
 /* Plan workspace */
-.plan-header { margin: 4px 0 16px; }
-.plan-header h1 { max-width: 760px; margin: 0; font-size: 28px; line-height: 1.15; letter-spacing: -.032em; }
+.plan-header { margin: 4px 0 28px; }
+.plan-header h1 { max-width: 760px; margin: 0; font-size: 28px; font-weight: 700; line-height: 1.15; letter-spacing: -.032em; color: #1f2133; }
 .plan-header p { margin: 0; color: #80849f; font-size: 12px; }
 .plan-back { padding: 0; border: 0; background: transparent; color: #6b63d9; font-size: 11px; cursor: pointer; }
 .plan-header .plan-actions { display: none; }
