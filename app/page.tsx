@@ -884,8 +884,7 @@ export default function Home() {
             <div className="messages">
               {messages.length === 0 && !rehearseLoading && (
                 <div className="messages-empty">
-                  Сформулируйте диалог по шагам плана справа. Напишите первую фразу сами —
-                  помощь с формулировками можно открыть в шаге.
+                  Напишите первую фразу в чат. Подсказка и пример — в блоке «Ваш ход».
                 </div>
               )}
               {messages.map((m, i) => (
@@ -956,7 +955,7 @@ export default function Home() {
                   <div className="coach-title">
                     <div>
                       <b>Тренажёр</b>
-                      <small>Справа — только текущий ход</small>
+                      <small>Только текущий ход — без лишнего</small>
                     </div>
                   </div>
 
