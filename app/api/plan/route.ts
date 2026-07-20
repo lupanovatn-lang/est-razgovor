@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const raw = await openaiJson<ConversationPlan>({
       system: PLAN_SYSTEM,
       user: planUserPrompt(input),
-      temperature: 0.55,
+      temperature: 0.4,
     });
 
     const plan = normalizePlan(raw, {

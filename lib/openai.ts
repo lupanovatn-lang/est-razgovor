@@ -266,25 +266,28 @@ export function normalizePlan(
     goalText?: string;
   },
 ): ConversationPlan {
-  const steps = (raw.steps || []).slice(0, 6).map((s) => ({
-    title: String(s.title || "").trim(),
-    why: String(s.why || "").trim(),
-    action: String(s.action || "").trim(),
-    phrase: s.phrase ? String(s.phrase).trim() : undefined,
-    questions:
-      Array.isArray(s.questions) && s.questions.length > 0
-        ? s.questions.map(String)
-        : undefined,
-    reactions:
-      Array.isArray(s.reactions) && s.reactions.length > 0
-        ? s.reactions.map((r) => ({
-            child: String(r.child),
-            parent: String(r.parent),
-          }))
-        : undefined,
-    avoid: s.avoid ? String(s.avoid).trim() : undefined,
-    outcome: s.outcome ? String(s.outcome).trim() : undefined,
-  }));
+  const steps = (raw.steps || [])
+    .slice(0, 6)
+    .map((s) => repairStepDialogue({
+      title: String(s.title || "").trim(),
+      why: String(s.why || "").trim(),
+      action: String(s.action || "").trim(),
+      phrase: s.phrase ? String(s.phrase).trim() : undefined,
+      questions:
+        Array.isArray(s.questions) && s.questions.length > 0
+          ? s.questions.map(String)
+          : undefined,
+      reactions:
+        Array.isArray(s.reactions) && s.reactions.length > 0
+          ? s.reactions.map((r) => ({
+              child: String(r.child),
+              parent: String(r.parent),
+            }))
+          : undefined,
+      avoid: s.avoid ? String(s.avoid).trim() : undefined,
+      outcome: s.outcome ? String(s.outcome).trim() : undefined,
+    }))
+    .filter((s) => s.title && s.action);
 
   const rawTitle = String(raw.title || "План разговора").trim();
   const title = ctx
@@ -308,8 +311,50 @@ export function normalizePlan(
       ? String(raw.nonNegotiable).trim()
       : undefined,
     discussable: raw.discussable ? String(raw.discussable).trim() : undefined,
-    steps: steps.filter((s) => s.title && s.action),
+    steps: dedupeInviteSteps(steps, ctx?.goalKind),
   };
+}
+
+type NormStep = ConversationPlan["steps"][number];
+
+/** Keep dialogue cards usable and titles addressed to the parent. */
+function repairStepDialogue(step: NormStep): NormStep {
+  let title = step.title
+    .replace(/\bкак ты\b/gi, "как ребёнок")
+    .replace(/\bчто ты думаешь\b/gi, "что думает ребёнок")
+    .replace(/\bрасскажи,? как ты\b/gi, "спросите, как ребёнок");
+
+  let questions = step.questions;
+  const isListen = /выслуша|слушайте без/i.test(title);
+  if (isListen && questions && questions.length > 1) {
+    questions = questions.slice(0, 1);
+  }
+
+  let phrase = step.phrase;
+  if (!phrase && questions?.[0]) {
+    const q = questions[0].trim().replace(/\?+$/, "");
+    phrase = /^(как|что|почему|зачем|чего|когда|где)/i.test(q)
+      ? `${q}?`
+      : `Расскажи: ${q}?`;
+  }
+
+  return { ...step, title, phrase, questions };
+}
+
+/** Support plans often double-invite; drop a redundant second invite. */
+function dedupeInviteSteps(steps: NormStep[], goalKind?: GoalKind): NormStep[] {
+  if (goalKind !== "support" || steps.length < 3) return steps;
+  const isInvite = (s: NormStep) =>
+    /поговори|рассказ|когда будет готов|если захочешь/i.test(
+      `${s.title} ${s.phrase || ""}`,
+    );
+  const out: NormStep[] = [];
+  for (const s of steps) {
+    const prev = out[out.length - 1];
+    if (prev && isInvite(prev) && isInvite(s)) continue;
+    out.push(s);
+  }
+  return out.length >= 3 ? out : steps;
 }
 
 /** Strip goal-style openings so title stays about the topic. */
