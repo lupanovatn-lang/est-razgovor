@@ -508,30 +508,56 @@ export default function Home() {
   }
 
   function GeneratingState() {
+    const progress = ((statusIndex + 1) / GENERATING_STATUSES.length) * 100;
+    const skeletonCount = Math.min(4, statusIndex + 2);
+
     return (
-      <div className="generating-plan" aria-live="polite" aria-busy="true">
-        <div className="generating-orb" aria-hidden="true">
-          <span />
-        </div>
-        <h1>Составляем план</h1>
-        <p className="generating-current">{GENERATING_STATUSES[statusIndex]}…</p>
-        <ul className="generating-statuses">
-          {GENERATING_STATUSES.map((label, i) => {
-            const done = i < statusIndex;
-            const active = i === statusIndex;
-            return (
-              <li
-                key={label}
-                className={done ? "done" : active ? "active" : ""}
+      <div className="generating-wrap" aria-live="polite" aria-busy="true">
+        <aside className="generating-card">
+          <div className="generating-kicker">Идёт подготовка</div>
+          <h1>Составляем план</h1>
+          <p className="generating-context">
+            {topic}
+            {goalText || goalLabel(goalKind) ? ` · ${goalText || goalLabel(goalKind)}` : ""}
+          </p>
+
+          <div className="generating-progress" aria-hidden="true">
+            <i style={{ width: `${progress}%` }} />
+          </div>
+          <p className="generating-current">{GENERATING_STATUSES[statusIndex]}…</p>
+
+          <ul className="generating-statuses">
+            {GENERATING_STATUSES.map((label, i) => {
+              const done = i < statusIndex;
+              const active = i === statusIndex;
+              return (
+                <li key={label} className={done ? "done" : active ? "active" : ""}>
+                  <span className="status-dot" aria-hidden="true" />
+                  {label}
+                </li>
+              );
+            })}
+          </ul>
+        </aside>
+
+        <div className="generating-preview" aria-hidden="true">
+          <div className="skeleton-title shimmer" />
+          <div className="skeleton-line shimmer short" />
+          <div className="skeleton-plan">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div
+                key={i}
+                className={i < skeletonCount ? "skeleton-step on" : "skeleton-step"}
               >
-                <span className="status-mark" aria-hidden="true">
-                  {done ? "✓" : active ? "●" : "○"}
-                </span>
-                {label}
-              </li>
-            );
-          })}
-        </ul>
+                <span className="skeleton-num">{i + 1}</span>
+                <div className="skeleton-copy">
+                  <div className="skeleton-line shimmer" />
+                  <div className="skeleton-line shimmer short" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

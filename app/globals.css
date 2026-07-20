@@ -58,21 +58,44 @@ button { color: inherit; }
 .empty-plan h1 { margin: 0 0 10px; font-size: 26px; letter-spacing: -.025em; line-height: 1.2; }
 .empty-plan p { margin: 0; color: #7c8099; font-size: 14px; line-height: 1.55; }
 
-.generating-plan { width: min(420px, 100%); margin: 10vh auto 0; text-align: center; }
-.generating-orb { width: 56px; height: 56px; margin: 0 auto 20px; border-radius: 50%; background: linear-gradient(135deg, #d5d0ff, #c5dcff); display: grid; place-items: center; animation: pulse-orb 1.4s ease-in-out infinite; }
-.generating-orb span { width: 18px; height: 18px; border-radius: 50%; background: #fff; opacity: .85; }
-.generating-plan h1 { margin: 0 0 8px; font-size: 26px; letter-spacing: -.025em; }
-.generating-current { margin: 0 0 22px; color: #6257e9; font-size: 14px; font-weight: 600; min-height: 1.4em; }
-.generating-statuses { list-style: none; margin: 0 auto; padding: 0; width: fit-content; text-align: left; display: grid; gap: 10px; }
-.generating-statuses li { display: flex; align-items: center; gap: 10px; color: #a0a3b8; font-size: 13px; transition: color .2s ease; }
-.generating-statuses li.active { color: #3f435a; font-weight: 600; }
+.generating-wrap { width: min(920px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); gap: 22px; align-items: start; }
+.generating-card { padding: 22px 20px 20px; border: 1px solid #e1e3ef; border-radius: 18px; background: rgba(255,255,255,.92); box-shadow: 0 10px 28px rgba(70,72,120,.05); }
+.generating-kicker { margin-bottom: 8px; color: #7064ed; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.generating-card h1 { margin: 0 0 8px; font-size: 24px; letter-spacing: -.025em; line-height: 1.2; }
+.generating-context { margin: 0 0 18px; color: #7c8099; font-size: 12px; line-height: 1.45; }
+.generating-progress { height: 4px; margin-bottom: 12px; border-radius: 999px; background: #eceef8; overflow: hidden; }
+.generating-progress i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7f6cff, #55a8ff); transition: width .45s ease; }
+.generating-current { margin: 0 0 16px; color: #5045ce; font-size: 13px; font-weight: 650; min-height: 1.35em; }
+.generating-statuses { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.generating-statuses li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #eef0f6; color: #a0a3b8; font-size: 13px; transition: color .2s ease; }
+.generating-statuses li:first-child { border-top: 0; padding-top: 2px; }
+.generating-statuses li.active { color: #2f3144; font-weight: 650; }
 .generating-statuses li.done { color: #6d718a; }
-.status-mark { width: 16px; text-align: center; color: #b0b3c8; font-size: 11px; }
-.generating-statuses li.active .status-mark { color: #6257e9; }
-.generating-statuses li.done .status-mark { color: #7a84d8; }
-@keyframes pulse-orb {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.06); opacity: .88; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid #c5c8dc; background: transparent; flex: 0 0 auto; }
+.generating-statuses li.active .status-dot { border-color: #6257e9; background: #6257e9; box-shadow: 0 0 0 4px rgba(98,87,233,.12); }
+.generating-statuses li.done .status-dot { border-color: #9aa0d8; background: #9aa0d8; }
+
+.generating-preview { min-width: 0; padding: 8px 4px 0; }
+.skeleton-title { height: 28px; width: min(420px, 78%); border-radius: 10px; margin-bottom: 12px; }
+.skeleton-line { height: 12px; width: 100%; border-radius: 8px; margin-bottom: 8px; }
+.skeleton-line.short { width: 58%; margin-bottom: 18px; }
+.skeleton-plan { border: 1px solid #e1e3ef; border-radius: 17px; background: rgba(255,255,255,.78); overflow: hidden; }
+.skeleton-step { display: grid; grid-template-columns: 46px 1fr; gap: 14px; align-items: center; padding: 16px 18px; border-bottom: 1px solid #e8eaf2; opacity: .35; transition: opacity .35s ease; }
+.skeleton-step:last-child { border-bottom: 0; }
+.skeleton-step.on { opacity: 1; }
+.skeleton-num { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: #f0effd; color: #9aa0c8; font-size: 14px; font-weight: 650; }
+.skeleton-copy { min-width: 0; }
+.skeleton-copy .skeleton-line { margin-bottom: 8px; }
+.skeleton-copy .skeleton-line.short { margin-bottom: 0; width: 70%; }
+.shimmer { background: linear-gradient(90deg, #eceef8 0%, #f7f8fd 45%, #eceef8 90%); background-size: 200% 100%; animation: shimmer 1.35s linear infinite; }
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@media (max-width: 900px) {
+  .generating-wrap { grid-template-columns: 1fr; }
+  .generating-preview { display: none; }
 }
 
 .prep-banner { display: none; }
@@ -221,12 +244,11 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .rehearse-cta button { border: 0; border-radius: 9px; background: white; padding: 11px 15px; color: #554ad8; font-size: 11px; font-weight: 700; cursor: pointer; }
 
 /* Plan workspace */
-.plan-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin: 4px 0 18px; }
-.plan-header h1 { max-width: 760px; margin: 0 0 7px; font-size: 28px; line-height: 1.15; letter-spacing: -.032em; }
+.plan-header { margin: 4px 0 16px; }
+.plan-header h1 { max-width: 760px; margin: 0; font-size: 28px; line-height: 1.15; letter-spacing: -.032em; }
 .plan-header p { margin: 0; color: #80849f; font-size: 12px; }
 .plan-back { padding: 0; border: 0; background: transparent; color: #6b63d9; font-size: 11px; cursor: pointer; }
-.plan-header .plan-actions { flex: 0 0 auto; margin-bottom: 2px; display: flex; flex-wrap: wrap; gap: 7px; }
-.plan-header .icon-btn { min-width: 94px; padding: 9px 13px; background: rgba(255,255,255,.7); }
+.plan-header .plan-actions { display: none; }
 .plan-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
 .plan-flow { overflow: hidden; border: 1px solid #e1e3ef; border-radius: 17px; background: rgba(255,255,255,.78); }
 .plan-step { border-bottom: 1px solid #e5e7f0; }
