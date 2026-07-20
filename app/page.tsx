@@ -10,7 +10,7 @@ import {
   type PlanStep,
 } from "../lib/plans";
 
-type Step = "brief" | "context" | "plan" | "rehearsal";
+type View = "compose" | "plan" | "rehearsal";
 
 type ChatMessage = { role: "parent" | "child"; text: string };
 
@@ -55,7 +55,7 @@ function persistSaved(items: SavedConversation[]) {
 }
 
 export default function Home() {
-  const [step, setStep] = useState<Step>("brief");
+  const [view, setView] = useState<View>("compose");
   const [topic, setTopic] = useState("Гаджеты и интернет");
   const [age, setAge] = useState("");
   const [situation, setSituation] = useState("");
@@ -83,7 +83,6 @@ export default function Home() {
   const [rehearseLoading, setRehearseLoading] = useState(false);
   const [rehearseError, setRehearseError] = useState("");
 
-  const progress = step === "brief" ? 1 : step === "context" ? 2 : 3;
   const childName = age ? `${age} лет` : "ребёнок";
   const suggested = useMemo(
     () => suggestGoalKind(situation, topic),
@@ -112,6 +111,7 @@ export default function Home() {
     setPlanWarning("");
     setPlanError("");
     setOpenPlanStep("01");
+    setMoreReactions({});
     setMessages([]);
     setReply("");
     setCoachTip("");
@@ -119,7 +119,7 @@ export default function Home() {
     setSignals([]);
     setFeedback("");
     setRehearseError("");
-    setStep("brief");
+    setView("compose");
   };
 
   const selectGoal = (kind: GoalKind) => {
@@ -131,6 +131,10 @@ export default function Home() {
   };
 
   const generatePlan = async () => {
+    if (!situation.trim()) {
+      setPlanError("Опишите ситуацию");
+      return;
+    }
     setGenerating(true);
     setPlanError("");
     setPlanWarning("");
@@ -150,11 +154,13 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось составить план");
       setPlan(data.plan as ConversationPlan);
-      setPlanSource(data.source === "openai" || data.source === "openrouter" ? "openai" : "fallback");
+      setPlanSource(
+        data.source === "openai" || data.source === "openrouter" ? "openai" : "fallback",
+      );
       setPlanWarning(data.warning || "");
       setOpenPlanStep("01");
       setMoreReactions({});
-      setStep("plan");
+      setView("plan");
     } catch (e) {
       setPlanError(e instanceof Error ? e.message : "Ошибка генерации");
     } finally {
@@ -198,7 +204,7 @@ export default function Home() {
     setPlanWarning("");
     setOpenPlanStep("01");
     setMessages([]);
-    setStep("plan");
+    setView("plan");
   };
 
   const copyPlan = async () => {
@@ -230,7 +236,7 @@ export default function Home() {
 
   const startRehearsal = async () => {
     if (!plan) return;
-    setStep("rehearsal");
+    setView("rehearsal");
     setMessages([{ role: "parent", text: openingPhrase }]);
     setCoachTip("");
     setTryPhrase("");
@@ -311,161 +317,172 @@ export default function Home() {
     }
   };
 
-  function Form() {
-    const context = step === "context";
+  function SettingsPanel() {
     return (
-      <section className="form-card">
-        <div className="eyebrow">{context ? "Шаг 2 из 2" : "Шаг 1 из 2"}</div>
-        <h1>
-          {context
-            ? "Расскажите немного о ребёнке"
-            : "Расскажите о предстоящем разговоре с ребёнком"}
-        </h1>
-        <p className="lead">
-          {context
-            ? "Возраст и привычная реакция помогут подобрать подходящий тон и вопросы."
-            : "Не нужно подбирать идеальные слова, достаточно коротко описать ситуацию."}
-        </p>
+      <aside className="settings-panel">
+        <div className="settings-scroll">
+          <h2>Параметры разговора</h2>
+          <p className="settings-lead">
+            Опишите ситуацию и цель — справа появится план.
+          </p>
 
-        {!context ? (
-          <>
-            <label>О чём вы хотите поговорить?</label>
-            <div className="chips">
-              {topics.map((x) => (
-                <button
-                  key={x}
-                  className={topic === x ? "chip active" : "chip"}
-                  onClick={() => {
-                    setTopic(x);
-                    setGoalTouched(false);
-                  }}
-                >
-                  {x}
-                </button>
-              ))}
+          {savedList.length > 0 && (
+            <div className="settings-saved">
+              <span className="field-label">Сохранённые</span>
+              <div className="saved-pills">
+                {savedList.slice(0, 5).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={activeId === item.id ? "saved-pill active" : "saved-pill"}
+                    onClick={() => openSaved(item)}
+                  >
+                    {item.title}
+                  </button>
+                ))}
+              </div>
             </div>
+          )}
 
-            <label htmlFor="situation">Что случилось или происходит сейчас?</label>
-            <textarea
-              id="situation"
-              value={situation}
+          <label className="field-label" htmlFor="topic">
+            Тема
+          </label>
+          <div className="select-wrap">
+            <select
+              id="topic"
+              value={topic}
               onChange={(e) => {
-                setSituation(e.target.value);
+                setTopic(e.target.value);
                 setGoalTouched(false);
               }}
-              rows={5}
-              placeholder="Кратко опишите ситуацию"
-            />
-            <div className="hint">
-              <span>✦</span>
-              <p>
-                <b>Можно коротко.</b> Например: что случилось, что вас беспокоит и что уже
-                пробовали.
-              </p>
-            </div>
-
-            <label>Что вы хотите получить в результате разговора?</label>
-            <p className="field-hint">
-              Например: понять причину поступка, сообщить решение, установить границу,
-              поддержать ребёнка или договориться о дальнейших действиях.
-            </p>
-            <div className="chips goal-chips">
-              {goalOptions.map((g) => (
-                <button
-                  key={g.id}
-                  className={goalKind === g.id ? "chip active" : "chip"}
-                  onClick={() => selectGoal(g.id)}
-                >
-                  {g.label}
-                </button>
+            >
+              {topics.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
-            </div>
-            {!goalTouched && situation.trim() && (
-              <div className="goal-suggest">
-                <span>✦</span>
-                <p>
-                  Мы предложили цель по описанию ситуации: <b>{goalLabel(suggested)}</b>. Вы
-                  можете подтвердить её или выбрать другую.
-                </p>
-              </div>
-            )}
+            </select>
+          </div>
 
-            <label htmlFor="goal">Опишите желаемый результат своими словами</label>
-            <textarea
-              id="goal"
-              value={goalText}
-              onChange={(e) => setGoalText(e.target.value)}
-              rows={3}
-              placeholder="Например: понять, почему он скрыл оценку"
-            />
-          </>
-        ) : (
-          <>
-            <label>Сколько лет ребёнку?</label>
-            <div className="age-row">
-              <input
-                className="age"
-                value={age}
-                onChange={(e) => setAge(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                aria-label="Возраст ребёнка"
-                placeholder="13"
-              />
-              <span>лет</span>
-            </div>
-            <label>Как ребёнок обычно реагирует?</label>
-            <div className="reaction-list">
-              {reactions.map((x) => (
-                <button
-                  key={x}
-                  className={reaction === x ? "reaction selected" : "reaction"}
-                  onClick={() => setReaction(x)}
-                >
-                  {x}
-                </button>
-              ))}
-            </div>
-            <div className="summary">
-              <div>
-                <b>Мы учтём контекст</b>
-                <p>
-                  {childName} · {topic.toLowerCase()} · {goalLabel(goalKind).toLowerCase()} ·{" "}
-                  {reaction.toLowerCase()}
-                </p>
-              </div>
-            </div>
-            {planError && <div className="form-error">{planError}</div>}
-          </>
-        )}
-
-        <div className="form-actions">
-          {context && (
-            <button className="back" onClick={() => setStep("brief")} disabled={generating}>
-              Назад
-            </button>
-          )}
-          <button
-            className="primary"
-            disabled={generating || (!context && !situation.trim())}
-            onClick={() => {
-              if (!context) {
-                setStep("context");
-                return;
-              }
-              void generatePlan();
+          <label className="field-label" htmlFor="situation">
+            Что случилось?
+          </label>
+          <textarea
+            id="situation"
+            className="settings-input"
+            value={situation}
+            onChange={(e) => {
+              setSituation(e.target.value);
+              setGoalTouched(false);
             }}
+            rows={4}
+            placeholder="Кратко опишите ситуацию"
+          />
+
+          <label className="field-label" htmlFor="goalKind">
+            Цель разговора
+          </label>
+          <div className="select-wrap">
+            <select
+              id="goalKind"
+              value={goalKind}
+              onChange={(e) => selectGoal(e.target.value as GoalKind)}
+            >
+              {goalOptions.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          {!goalTouched && situation.trim() && (
+            <p className="settings-hint">
+              Предложили по описанию: {goalLabel(suggested)}. Можно изменить.
+            </p>
+          )}
+
+          <label className="field-label" htmlFor="goal">
+            Результат своими словами
+          </label>
+          <textarea
+            id="goal"
+            className="settings-input"
+            value={goalText}
+            onChange={(e) => setGoalText(e.target.value)}
+            rows={2}
+            placeholder="Например: договориться о телефоне после 22:30"
+          />
+
+          <div className="settings-row">
+            <div>
+              <label className="field-label" htmlFor="age">
+                Возраст
+              </label>
+              <div className="age-row compact">
+                <input
+                  id="age"
+                  className="age settings-input"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  placeholder="13"
+                />
+                <span>лет</span>
+              </div>
+            </div>
+          </div>
+
+          <label className="field-label" htmlFor="reaction">
+            Как обычно реагирует
+          </label>
+          <div className="select-wrap">
+            <select
+              id="reaction"
+              value={reaction}
+              onChange={(e) => setReaction(e.target.value)}
+            >
+              {reactions.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {planError && <div className="form-error">{planError}</div>}
+        </div>
+
+        <div className="settings-footer">
+          <button
+            type="button"
+            className="generate-btn"
+            disabled={generating || !situation.trim()}
+            onClick={() => void generatePlan()}
           >
-            {context
-              ? generating
-                ? "Составляем план…"
-                : "Составить план"
-              : "Продолжить"}
+            {generating ? "Составляем…" : plan ? "Обновить план" : "+ Составить план"}
           </button>
+          <p className="settings-privacy">
+            Описание используется только для составления плана
+          </p>
         </div>
-        <div className="privacy">
-          <img src="/lock.svg" alt="" />
-          Ваше описание используется только для составления плана
+      </aside>
+    );
+  }
+
+  function EmptyState() {
+    return (
+      <div className="empty-plan">
+        <div className="empty-plan-icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <rect x="10" y="8" width="28" height="34" rx="6" stroke="#b8b6ef" strokeWidth="2" />
+            <path d="M18 18h12M18 24h12M18 30h8" stroke="#b8b6ef" strokeWidth="2" strokeLinecap="round" />
+          </svg>
         </div>
-      </section>
+        <h1>Здесь появится план разговора</h1>
+        <p>
+          Заполните параметры слева и нажмите «Составить план». Структура шагов подстроится
+          под вашу цель.
+        </p>
+      </div>
     );
   }
 
@@ -478,9 +495,6 @@ export default function Home() {
       <section className="plan-wrap">
         <header className="plan-header">
           <div>
-            <button className="plan-back" onClick={() => setStep("context")}>
-              К описанию ситуации
-            </button>
             <h1>{plan.title}</h1>
             <p>
               План из {plan.steps.length} {stepWord} · ребёнку {childName}
@@ -500,8 +514,16 @@ export default function Home() {
               <img src="/copy-ref.png" alt="" />
               {copied ? "Скопировано" : "Копировать"}
             </button>
+            <button className="rehearse-button inline" onClick={() => void startRehearsal()}>
+              Потренироваться
+            </button>
           </div>
         </header>
+
+        <div className="prep-banner">
+          <span>Напоминание</span>
+          <p>{plan.reminder}</p>
+        </div>
 
         {(plan.nonNegotiable || plan.discussable) && (
           <div className="boundary-split">
@@ -520,47 +542,11 @@ export default function Home() {
           </div>
         )}
 
-        <div className="plan-layout">
-          <div className="plan-flow">
-            {plan.steps.map((s, i) => {
-              const n = String(i + 1).padStart(2, "0");
-              return <PlanItem key={n} n={n} title={s.title} preview={s.why} step={s} />;
-            })}
-          </div>
-          <aside className="plan-cheatsheet">
-            <h2>Подготовка к разговору</h2>
-            <div className="prep-meta">
-              <div>
-                <span>Тема</span>
-                <p>{topic}</p>
-              </div>
-              <div>
-                <span>Возраст ребёнка</span>
-                <p>{childName}</p>
-              </div>
-              <div>
-                <span>Цель разговора</span>
-                <p>{goalText || goalLabel(goalKind)}</p>
-              </div>
-              <div>
-                <span>План</span>
-                <p>
-                  {plan.steps.length} {stepWord}
-                </p>
-              </div>
-            </div>
-            <div className="prep-reminder">
-              <span>Напоминание</span>
-              <p>{plan.reminder}</p>
-            </div>
-            <button className="edit-plan-button" onClick={() => setStep("brief")}>
-              <img src="/pencil-ref.png" alt="" />
-              Редактировать план
-            </button>
-            <button className="rehearse-button" onClick={() => void startRehearsal()}>
-              Потренироваться
-            </button>
-          </aside>
+        <div className="plan-flow">
+          {plan.steps.map((s, i) => {
+            const n = String(i + 1).padStart(2, "0");
+            return <PlanItem key={n} n={n} title={s.title} preview={s.why} step={s} />;
+          })}
         </div>
       </section>
     );
@@ -578,14 +564,14 @@ export default function Home() {
     step: PlanStep;
   }) {
     const open = openPlanStep === n;
-    const reactions = planStep.reactions ?? [];
-    const primaryReaction = reactions[0];
-    const extraReactions = reactions.slice(1);
+    const reactionsList = planStep.reactions ?? [];
+    const primaryReaction = reactionsList[0];
+    const extraReactions = reactionsList.slice(1);
     const showExtras = !!moreReactions[n];
     const hasScenario =
       !!planStep.phrase ||
       (planStep.questions && planStep.questions.length > 0) ||
-      reactions.length > 0;
+      reactionsList.length > 0;
 
     return (
       <article className={open ? "plan-step open" : "plan-step"}>
@@ -680,7 +666,12 @@ export default function Home() {
                       stroke="currentColor"
                       strokeWidth="1.2"
                     />
-                    <path d="M2.2 11.8 11.8 2.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                    <path
+                      d="M2.2 11.8 11.8 2.2"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 </span>
                 <p>
@@ -699,7 +690,7 @@ export default function Home() {
   function Rehearsal() {
     return (
       <section className="rehearsal-wrap">
-        <button className="back rehearsal-back" onClick={() => setStep("plan")}>
+        <button className="back rehearsal-back" onClick={() => setView("plan")}>
           Вернуться к плану
         </button>
         <div className="rehearsal-grid">
@@ -763,7 +754,10 @@ export default function Home() {
                 <small>видите только вы</small>
               </div>
             </div>
-            <p>{coachTip || "Отправьте реплику — появится подсказка под текущий момент разговора."}</p>
+            <p>
+              {coachTip ||
+                "Отправьте реплику — появится подсказка под текущий момент разговора."}
+            </p>
             {tryPhrase && (
               <div className="try">
                 <span>Можно попробовать</span>
@@ -793,48 +787,40 @@ export default function Home() {
     );
   }
 
+  const showSettings = view !== "rehearsal";
+
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <button className="brand" onClick={resetNew}>
+    <div className={showSettings ? "app-shell" : "app-shell rehearsal-mode"}>
+      <header className="app-header">
+        <button type="button" className="brand" onClick={resetNew}>
           <img src="/conversation-mark.png" alt="" />
           <span className="brand-copy">
             <b>Есть разговор</b>
-            <small>ИИ-помощник для подготовки к сложным разговорам с ребёнком</small>
+            <small>Подготовка к сложному разговору с ребёнком</small>
           </span>
         </button>
-        <button className="new-conversation" onClick={resetNew}>
+        <button type="button" className="header-new" onClick={resetNew}>
           <img src="/plus.svg" alt="" />
           Новый разговор
         </button>
-        <div className="conversations-list">
-          {savedList.length === 0 ? (
-            <p className="empty-history">Сохранённых разговоров пока нет</p>
-          ) : (
-            savedList.map((item) => (
-              <button
-                key={item.id}
-                className={activeId === item.id ? "history-item active" : "history-item"}
-                onClick={() => openSaved(item)}
-              >
-                {item.title}
-              </button>
-            ))
-          )}
-        </div>
-      </aside>
-      <section className="workspace">
-        <div className="progress">
-          <i style={{ width: `${progress * 33.33}%` }} />
-        </div>
-        <main>
-          {step === "plan" ? PlanView() : step === "rehearsal" ? Rehearsal() : Form()}
-        </main>
-        <footer>
-          <p>ИИ может ошибаться. В кризисной ситуации обратитесь к специалисту.</p>
-          <div>Конфиденциальность</div>
-        </footer>
-      </section>
+      </header>
+
+      <div className="app-body">
+        {showSettings && SettingsPanel()}
+        <section className="workspace">
+          <main>
+            {view === "rehearsal"
+              ? Rehearsal()
+              : view === "plan" && plan
+                ? PlanView()
+                : EmptyState()}
+          </main>
+          <footer>
+            <p>ИИ может ошибаться. В кризисной ситуации обратитесь к специалисту.</p>
+            <div>Конфиденциальность</div>
+          </footer>
+        </section>
+      </div>
     </div>
   );
 }
