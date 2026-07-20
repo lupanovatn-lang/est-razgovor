@@ -41,13 +41,12 @@ const reactions = [
 
 const STORAGE_KEY = "est-razgovor-conversations";
 
-const GENERATING_STEP_SLOTS = 4;
-
-const GENERATING_STEP_LABELS = [
-  { title: "Как начать разговор", hint: "Подбираем тон и первую фразу" },
-  { title: "Как услышать ребёнка", hint: "Формулируем вопросы и реакции" },
-  { title: "Как предложить правило", hint: "Собираем ясное предложение" },
-  { title: "Как закрепить договорённость", hint: "Пишем короткий итог шага" },
+const GENERATING_STATUSES = [
+  "Считываем ситуацию",
+  "Уточняем желаемый результат",
+  "Подбираем структуру разговора",
+  "Формулируем фразы и реакции",
+  "Собираем план",
 ];
 
 function GoalIcon({ kind }: { kind: GoalKind }) {
@@ -128,8 +127,8 @@ export default function Home() {
     }
     setStatusIndex(0);
     const id = window.setInterval(() => {
-      setStatusIndex((i) => Math.min(i + 1, GENERATING_STEP_SLOTS));
-    }, 900);
+      setStatusIndex((i) => Math.min(i + 1, GENERATING_STATUSES.length - 1));
+    }, 1100);
     return () => window.clearInterval(id);
   }, [generating]);
 
@@ -529,46 +528,39 @@ export default function Home() {
   }
 
   function GeneratingState() {
-    const filled = Math.min(GENERATING_STEP_SLOTS, Math.max(1, statusIndex));
-
     return (
-      <section className="plan-wrap generating-plan" aria-live="polite" aria-busy="true">
-        <header className="plan-header">
-          <h1 className="generating-title">Составляем план разговора</h1>
-          <div className="goal-badge">
-            <span className="goal-badge-icon">
-              <GoalIcon kind={goalKind} />
-            </span>
-            <span>
-              <span className="goal-badge-label">Цель разговора</span>
-              {resolvedGoal}
-            </span>
-          </div>
-        </header>
+      <section className="generating-wait" aria-live="polite" aria-busy="true">
+        <h1>Составляем план разговора</h1>
+        <p className="generating-lead">Подстраиваем шаги под вашу ситуацию</p>
 
-        <div className="plan-flow">
-          {GENERATING_STEP_LABELS.map((step, i) => {
-            const state =
-              i < filled - 1 ? "done" : i === filled - 1 ? "writing" : "wait";
+        <ul className="generating-statuses">
+          {GENERATING_STATUSES.map((label, i) => {
+            const done = i < statusIndex;
+            const active = i === statusIndex;
             return (
-              <article key={step.title} className={`plan-step skeleton-row ${state}`}>
-                <div className="plan-step-head">
-                  <span className="plan-number">{i + 1}</span>
-                  <span className="plan-step-copy">
-                    <b>{step.title}</b>
-                    <small>
-                      {state === "done"
-                        ? "Готово"
-                        : state === "writing"
-                          ? `${step.hint}…`
-                          : "Ждёт очереди"}
-                    </small>
-                  </span>
-                </div>
-              </article>
+              <li key={label} className={done ? "done" : active ? "active" : ""}>
+                <span className="status-mark" aria-hidden="true">
+                  {done ? (
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path
+                        d="M3 7.2 5.8 10 11 3.8"
+                        stroke="currentColor"
+                        strokeWidth="1.7"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  ) : active ? (
+                    <i className="status-pulse" />
+                  ) : (
+                    <i className="status-idle" />
+                  )}
+                </span>
+                <span>{label}{active ? "…" : ""}</span>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </section>
     );
   }
