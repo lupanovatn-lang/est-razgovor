@@ -121,6 +121,7 @@ export default function Home() {
   const [paramsUnlocked, setParamsUnlocked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
+  const [openCoachStep, setOpenCoachStep] = useState(0);
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -369,22 +370,6 @@ export default function Home() {
     plan?.steps.find((s) => s.phrase)?.phrase ||
     "Я хочу спокойно поговорить. Мне важно услышать тебя.";
 
-  const seedRehearsalCoach = (nextPlan: ConversationPlan) => {
-    const first = nextPlan.steps[0];
-    const withPhrase = nextPlan.steps.find((s) => s.phrase);
-    setCoachTip(
-      first?.action ||
-        first?.why ||
-        nextPlan.reminder ||
-        "Начните разговор спокойно и по делу — как решили в плане.",
-    );
-    setTryPhrase(withPhrase?.phrase || openingPhrase);
-    setSignals(
-      nextPlan.steps.slice(0, 3).map((s) => s.title).filter(Boolean),
-    );
-    setFeedback(first?.avoid ? `Не стоит: ${first.avoid}` : "");
-  };
-
   const startRehearsal = () => {
     if (!plan) return;
     setView("rehearsal");
@@ -392,7 +377,11 @@ export default function Home() {
     setReply("");
     setRehearseError("");
     setRehearseLoading(false);
-    seedRehearsalCoach(plan);
+    setCoachTip("");
+    setTryPhrase("");
+    setSignals([]);
+    setFeedback("");
+    setOpenCoachStep(0);
   };
 
   const sendReply = async () => {
@@ -423,9 +412,9 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось получить ответ");
       setMessages([...nextHistory, { role: "child", text: data.childMessage }]);
+      // Live tip only — plan steps stay as the main coach structure.
       setCoachTip(data.coachTip || "");
       setTryPhrase(data.tryPhrase || "");
-      setSignals(data.signals || []);
       setFeedback(data.feedback || "");
     } catch (e) {
       setRehearseError(e instanceof Error ? e.message : "Ошибка репетиции");
@@ -957,44 +946,104 @@ export default function Home() {
               <span>✦</span>
               <div>
                 <b>Подсказки по плану</b>
-                <small>видите только вы</small>
+                <small>видите только вы · можно свернуть</small>
               </div>
             </div>
-            <p>
-              {coachTip ||
-                "Опирайтесь на шаги плана: спокойный тон, ясные границы, без обвинений."}
-            </p>
-            {tryPhrase && (
-              <div className="try">
-                <span>Можно начать так</span>
-                <p>«{tryPhrase}»</p>
-                <button
-                  type="button"
-                  className="text-action"
-                  disabled={rehearseLoading}
-                  onClick={() => setReply(tryPhrase)}
-                >
-                  Вставить в ответ
-                </button>
+
+            {coachTip && messages.length > 0 && (
+              <div className="coach-live">
+                <span>Сейчас</span>
+                <p>{coachTip}</p>
+                {tryPhrase && (
+                  <button
+                    type="button"
+                    className="text-action"
+                    disabled={rehearseLoading}
+                    onClick={() => setReply(tryPhrase)}
+                  >
+                    Вставить предложенную фразу
+                  </button>
+                )}
+                {feedback && <p className="coach-live-note">{feedback}</p>}
               </div>
             )}
-            {signals.length > 0 && (
-              <div className="signals">
-                <b>Шаги из плана</b>
-                {signals.map((s) => (
-                  <div key={s}>
-                    <span>○</span>
-                    {s}
-                  </div>
-                ))}
-              </div>
-            )}
-            {feedback && (
-              <div className="feedback">
-                <b>Короткая заметка</b>
-                <p>{feedback}</p>
-              </div>
-            )}
+
+            <div className="coach-steps">
+              {(plan?.steps ?? []).map((step, i) => {
+                const open = openCoachStep === i;
+                const hasHints =
+                  !!step.action ||
+                  !!step.why ||
+                  !!step.phrase ||
+                  !!(step.questions && step.questions.length) ||
+                  !!step.avoid;
+                return (
+                  <article key={`${step.title}-${i}`} className={open ? "coach-step open" : "coach-step"}>
+                    <button
+                      type="button"
+                      className="coach-step-head"
+                      aria-expanded={open}
+                      onClick={() => setOpenCoachStep(open ? -1 : i)}
+                    >
+                      <span className="coach-step-num">{i + 1}</span>
+                      <b>{step.title}</b>
+                      <span className="coach-step-toggle">{open ? "Свернуть" : "Подсказки"}</span>
+                    </button>
+                    {open && hasHints && (
+                      <div className="coach-step-body">
+                        {(step.action || step.why) && (
+                          <p>{step.action || step.why}</p>
+                        )}
+                        {step.phrase && (
+                          <div className="try">
+                            <span>Можно сказать</span>
+                            <p>«{step.phrase}»</p>
+                            <button
+                              type="button"
+                              className="text-action"
+                              disabled={rehearseLoading}
+                              onClick={() => setReply(step.phrase || "")}
+                            >
+                              Вставить в ответ
+                            </button>
+                          </div>
+                        )}
+                        {step.questions && step.questions.length > 0 && (
+                          <div className="coach-questions">
+                            <span>Можно спросить</span>
+                            <ul>
+                              {step.questions.map((q) => (
+                                <li key={q}>
+                                  <button
+                                    type="button"
+                                    className="coach-question"
+                                    disabled={rehearseLoading}
+                                    onClick={() => setReply(q)}
+                                  >
+                                    {q}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {step.avoid && (
+                          <div className="feedback">
+                            <b>Не стоит</b>
+                            <p>{step.avoid}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {open && !hasHints && (
+                      <div className="coach-step-body">
+                        <p>Для этого шага опирайтесь на цель разговора и спокойный тон.</p>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
           </aside>
         </div>
       </section>
