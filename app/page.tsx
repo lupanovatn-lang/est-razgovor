@@ -217,7 +217,26 @@ export default function Home() {
       }
       setOpenPlanStep("");
       setMoreReactions({});
-      if (activeId) setParamsUnlocked(false);
+      if (activeId) {
+        const savedGoal =
+          nextPlan.goal || goalText || deriveSituationGoal(situation, goalKind, goalText);
+        const item: SavedConversation = {
+          id: activeId,
+          title: nextPlan.title,
+          topic,
+          situation,
+          goalKind,
+          goalText: savedGoal,
+          age,
+          reaction,
+          plan: nextPlan,
+          updatedAt: Date.now(),
+        };
+        const next = [item, ...savedList.filter((x) => x.id !== item.id)];
+        setSavedList(next);
+        persistSaved(next);
+        setParamsUnlocked(false);
+      }
       setView("plan");
     } catch (e) {
       setPlanError(e instanceof Error ? e.message : "Ошибка генерации");
@@ -649,9 +668,14 @@ export default function Home() {
           <button type="button" className="text-action" onClick={focusSettings}>
             Изменить запрос
           </button>
-          <button type="button" className="text-action" onClick={saveConversation}>
-            {savedFlash ? "Сохранено" : "Сохранить"}
-          </button>
+          {!activeId && (
+            <button type="button" className="text-action" onClick={saveConversation}>
+              {savedFlash ? "Сохранено" : "Сохранить"}
+            </button>
+          )}
+          {activeId && (
+            <span className="plan-saved-mark">В сохранённых</span>
+          )}
           <button type="button" className="text-action" onClick={copyPlan}>
             {copied ? "Скопировано" : "Копировать"}
           </button>
