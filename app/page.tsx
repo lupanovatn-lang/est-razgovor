@@ -96,6 +96,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
+  const [savedMenuOpen, setSavedMenuOpen] = useState(false);
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -132,6 +133,24 @@ export default function Home() {
     }, 1000);
     return () => window.clearInterval(id);
   }, [generating]);
+
+  useEffect(() => {
+    if (!savedMenuOpen) return;
+    const onPointer = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest(".header-saved")) return;
+      setSavedMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSavedMenuOpen(false);
+    };
+    window.addEventListener("mousedown", onPointer);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onPointer);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [savedMenuOpen]);
 
   const resetNew = () => {
     setActiveId(null);
@@ -246,6 +265,7 @@ export default function Home() {
     setPlanWarning("");
     setOpenPlanStep("");
     setMessages([]);
+    setSavedMenuOpen(false);
     setView("plan");
   };
 
@@ -367,26 +387,6 @@ export default function Home() {
           <p className="settings-lead">
             Опишите ситуацию и цель — справа появится план.
           </p>
-
-          {savedList.length > 0 && (
-            <div className="settings-saved">
-              <span className="field-label">Сохранённые</span>
-              <ul className="saved-list">
-                {savedList.slice(0, 5).map((item) => (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      className={activeId === item.id ? "saved-item active" : "saved-item"}
-                      onClick={() => openSaved(item)}
-                    >
-                      <b>{item.title}</b>
-                      <small>{item.goalText || item.topic}</small>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
 
           <label className="field-label" htmlFor="topic">
             Тема
@@ -863,10 +863,42 @@ export default function Home() {
             <small>Подготовка к сложному разговору с ребёнком</small>
           </span>
         </button>
-        <button type="button" className="header-new" onClick={resetNew}>
-          <img src="/plus.svg" alt="" />
-          Новый план
-        </button>
+        <div className="header-actions">
+          {savedList.length > 0 && (
+            <div className="header-saved">
+              <button
+                type="button"
+                className={savedMenuOpen ? "header-saved-btn open" : "header-saved-btn"}
+                aria-expanded={savedMenuOpen}
+                aria-haspopup="listbox"
+                onClick={() => setSavedMenuOpen((v) => !v)}
+              >
+                Мои планы
+                <span className="header-saved-count">{savedList.length}</span>
+              </button>
+              {savedMenuOpen && (
+                <ul className="header-saved-menu" role="listbox">
+                  {savedList.slice(0, 8).map((item) => (
+                    <li key={item.id} role="option" aria-selected={activeId === item.id}>
+                      <button
+                        type="button"
+                        className={activeId === item.id ? "saved-item active" : "saved-item"}
+                        onClick={() => openSaved(item)}
+                      >
+                        <b>{item.title}</b>
+                        <small>{item.goalText || item.topic}</small>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          <button type="button" className="header-new" onClick={resetNew}>
+            <img src="/plus.svg" alt="" />
+            Новый план
+          </button>
+        </div>
       </header>
 
       <div className="app-body">
