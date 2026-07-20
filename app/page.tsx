@@ -225,8 +225,18 @@ export default function Home() {
   const generatePlan = async () => {
     if (paramsLocked) return;
     setFormAttempted(true);
-    if (!situation.trim() || !age.trim() || !topic.trim() || !reaction.trim()) {
-      setPlanError("Заполните обязательные поля: ситуация и возраст");
+    if (!formValid) {
+      setPlanError("Заполните обязательные поля со звёздочкой");
+      const missing = !situation.trim()
+        ? "situation"
+        : !age.trim()
+          ? "age"
+          : null;
+      if (missing) {
+        window.setTimeout(() => {
+          document.getElementById(missing)?.focus();
+        }, 0);
+      }
       return;
     }
     setGenerating(true);
