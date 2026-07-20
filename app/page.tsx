@@ -128,6 +128,7 @@ export default function Home() {
   const [coachTip, setCoachTip] = useState("");
   const [coachActiveStep, setCoachActiveStep] = useState<number | null>(null);
   const [tryPhrase, setTryPhrase] = useState("");
+  const [showCoachPhrase, setShowCoachPhrase] = useState(false);
   const [rehearseLoading, setRehearseLoading] = useState(false);
   const [rehearseError, setRehearseError] = useState("");
   const [statusIndex, setStatusIndex] = useState(0);
@@ -410,6 +411,7 @@ export default function Home() {
     setCoachTip("");
     setCoachActiveStep(1);
     setTryPhrase("");
+    setShowCoachPhrase(false);
   };
 
   const sendReply = async (preset?: string) => {
@@ -453,6 +455,7 @@ export default function Home() {
         : (coachActiveStep ?? 1);
       setCoachActiveStep((prev) => Math.max(prev ?? 1, nextActive));
       setTryPhrase(data.tryPhrase || "");
+      setShowCoachPhrase(false);
     } catch (e) {
       setRehearseError(e instanceof Error ? e.message : "Ошибка репетиции");
     } finally {
@@ -1039,33 +1042,56 @@ export default function Home() {
             {focusStep ? (
               <div className="coach-now">
                 <p className="coach-now-title">{focusStep.title}</p>
-                {tipText ? <p className="coach-now-tip">{tipText}</p> : null}
+                <p className="coach-now-tip">
+                  {tipText ||
+                    (messages.length === 0
+                      ? "Напишите первую реплику своими словами — или откройте фразу-подсказку."
+                      : "Продолжите своими словами — при необходимости откройте фразу-подсказку.")}
+                </p>
 
                 {tipPhrase ? (
-                  <div className="coach-say">
-                    <p>«{tipPhrase}»</p>
-                    <button
-                      type="button"
-                      className="coach-say-btn"
-                      disabled={rehearseLoading}
-                      onClick={() => void sendReply(tipPhrase)}
-                    >
-                      Сказать это
-                    </button>
-                    <button
-                      type="button"
-                      className="coach-say-edit"
-                      disabled={rehearseLoading}
-                      onClick={() => setReply(tipPhrase)}
-                    >
-                      Подправить в чате
-                    </button>
+                  <div className="coach-hint">
+                    {!showCoachPhrase ? (
+                      <button
+                        type="button"
+                        className="coach-hint-toggle"
+                        onClick={() => setShowCoachPhrase(true)}
+                      >
+                        Фраза-подсказка
+                      </button>
+                    ) : (
+                      <div className="coach-say">
+                        <div className="coach-say-head">
+                          <span>Фраза-подсказка</span>
+                          <button
+                            type="button"
+                            className="coach-hint-hide"
+                            onClick={() => setShowCoachPhrase(false)}
+                          >
+                            Скрыть
+                          </button>
+                        </div>
+                        <p>«{tipPhrase}»</p>
+                        <button
+                          type="button"
+                          className="coach-say-btn"
+                          disabled={rehearseLoading}
+                          onClick={() => void sendReply(tipPhrase)}
+                        >
+                          Сказать это
+                        </button>
+                        <button
+                          type="button"
+                          className="coach-say-edit"
+                          disabled={rehearseLoading}
+                          onClick={() => setReply(tipPhrase)}
+                        >
+                          Подправить в чате
+                        </button>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <p className="coach-now-tip">
-                    Напишите реплику своими словами в чате.
-                  </p>
-                )}
+                ) : null}
 
                 {avoid ? <p className="coach-avoid">Лучше не: {avoid}</p> : null}
               </div>
