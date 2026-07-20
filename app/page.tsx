@@ -670,10 +670,6 @@ export default function Home() {
             <span>{goalText || goalLabel(goalKind)}</span>
           </div>
           <h1>{plan.title}</h1>
-          <p className="plan-meta">
-            {plan.steps.length} {stepWord}
-            {age ? ` · ${childName}` : ""}
-          </p>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 
