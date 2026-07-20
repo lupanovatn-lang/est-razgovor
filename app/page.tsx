@@ -428,33 +428,11 @@ export default function Home() {
       <aside className={paramsLocked ? "settings-panel locked" : "settings-panel"}>
         <div className="settings-scroll">
           <h2>Параметры разговора</h2>
-          {paramsLocked ? (
-            <div className="settings-lock-banner">
-              <span className="settings-lock-icon" aria-hidden="true">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <rect x="3" y="6" width="8" height="6.5" rx="1.4" stroke="currentColor" strokeWidth="1.4" />
-                  <path
-                    d="M4.8 6V4.6a2.2 2.2 0 0 1 4.4 0V6"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>
-              <div>
-                <p>Сохранённый план — параметры заблокированы</p>
-                <button type="button" className="text-action" onClick={requestUnlockParams}>
-                  Изменить параметры
-                </button>
-              </div>
-            </div>
-          ) : openedFromLibrary ? (
+          {!paramsLocked && (
             <p className="settings-lead">
-              Измените параметры, затем нажмите «Обновить план».
-            </p>
-          ) : (
-            <p className="settings-lead">
-              Опишите ситуацию и цель — появится план разговора.
+              {openedFromLibrary
+                ? "Измените параметры, затем нажмите «Обновить план»."
+                : "Опишите ситуацию и цель — появится план разговора."}
             </p>
           )}
 
@@ -697,28 +675,31 @@ export default function Home() {
         </div>
 
         <div className="plan-bottom-actions">
-          <button type="button" className="text-action" onClick={focusSettings}>
-            Изменить запрос
-          </button>
-          {activeId ? (
-            <span className="plan-done-mark">
-              <DoneCheck />
-              Сохранено
-            </span>
-          ) : (
-            <button type="button" className="text-action" onClick={saveConversation}>
-              Сохранить
+          {!openedFromLibrary && (
+            <button type="button" className="text-action" onClick={focusSettings}>
+              Изменить запрос
             </button>
           )}
-          {copied ? (
+          {!openedFromLibrary &&
+            (activeId ? (
+              <span className="plan-done-mark">
+                <DoneCheck />
+                Сохранено
+              </span>
+            ) : (
+              <button type="button" className="text-action" onClick={saveConversation}>
+                Сохранить
+              </button>
+            ))}
+          {openedFromLibrary || !copied ? (
+            <button type="button" className="text-action" onClick={copyPlan}>
+              Копировать
+            </button>
+          ) : (
             <span className="plan-done-mark">
               <DoneCheck />
               Скопировано
             </span>
-          ) : (
-            <button type="button" className="text-action" onClick={copyPlan}>
-              Копировать
-            </button>
           )}
         </div>
 

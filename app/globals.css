@@ -167,36 +167,6 @@ button { color: inherit; }
   opacity: .62;
   pointer-events: none;
 }
-.settings-lock-banner {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin: 0 0 14px;
-  padding: 12px 12px 10px;
-  border-radius: 12px;
-  background: #e8e9f6;
-  color: #4a4e63;
-}
-.settings-lock-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #fff;
-  color: #6257e9;
-  flex: 0 0 auto;
-}
-.settings-lock-banner p {
-  margin: 0 0 2px;
-  font-size: 12px;
-  font-weight: 650;
-  line-height: 1.35;
-}
-.settings-lock-banner .text-action {
-  padding: 4px 0;
-  font-size: 12px;
-}
 .settings-panel.locked .settings-footer .generate-btn.locked-action {
   background: #fff;
   color: #5045ce;
