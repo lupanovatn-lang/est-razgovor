@@ -595,17 +595,45 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-cheatsheet > small { display: block; margin-top: 10px; color: #989bb0; font-size: 9px; line-height: 1.45; text-align: center; }
 
 .rehearsal-wrap { width: min(1040px, 100%); margin: 0 auto; }
-.rehearsal-back { margin-bottom: 14px; }
 .rehearsal-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(270px, .75fr); gap: 14px; }
 .chat-card, .coach-card { border: 1px solid #e0e2ef; border-radius: 15px; background: rgba(255,255,255,.94); }
 .chat-card { overflow: hidden; }
-.chat-head { display: flex; justify-content: space-between; align-items: center; padding: 20px 22px; border-bottom: 1px solid #e9eaf2; }
-.chat-head h1 { margin: 5px 0 0; font-size: 20px; }
-.live { color: #675cf0; font-size: 8px; text-transform: uppercase; letter-spacing: .09em; font-weight: 750; }
-.live i { display: none; }
-.more { border: 0; background: transparent; }
-.scenario { padding: 9px 22px; background: #f1f2fb; color: #7e8199; font-size: 10px; }
+.chat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 22px;
+  border-bottom: 1px solid #e9eaf2;
+}
+.chat-head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -.025em;
+  line-height: 1.2;
+}
+.chat-goal { margin-top: 10px; max-width: 48ch; }
+.chat-goal .goal-badge-label { margin-bottom: 4px; }
+.chat-goal p {
+  margin: 0;
+  color: #5a5e76;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+.chat-to-plan { flex: 0 0 auto; white-space: nowrap; }
 .messages { min-height: 370px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.messages-empty {
+  margin: auto 0;
+  max-width: 34ch;
+  color: #8a8eaa;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  align-self: center;
+}
 .turn-pair { display: contents; }
 .message { max-width: 80%; padding: 12px 14px; border-radius: 12px; font-size: 12px; line-height: 1.5; }
 .message small { display: block; margin-bottom: 4px; color: #8d90a7; font-size: 8px; text-transform: uppercase; letter-spacing: .08em; font-weight: 750; }
@@ -625,6 +653,7 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .try { margin: 14px 0; padding: 12px; border-radius: 9px; background: #f0f1fb; }
 .try span { color: #655aef; font-size: 8px; text-transform: uppercase; letter-spacing: .07em; font-weight: 750; }
 .try p { margin: 6px 0 0; color: #42455e; font-size: 12px; line-height: 1.5; }
+.try .text-action { margin-top: 8px; padding: 0; font-size: 12px; }
 .signals { display: grid; gap: 8px; font-size: 10px; }
 .signals b { margin-bottom: 2px; }
 .signals span { margin-right: 6px; color: #5d52e2; }

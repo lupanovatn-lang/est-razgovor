@@ -313,48 +313,30 @@ export default function Home() {
     plan?.steps.find((s) => s.phrase)?.phrase ||
     "Я хочу спокойно поговорить. Мне важно услышать тебя.";
 
-  const startRehearsal = async () => {
+  const seedRehearsalCoach = (nextPlan: ConversationPlan) => {
+    const first = nextPlan.steps[0];
+    const withPhrase = nextPlan.steps.find((s) => s.phrase);
+    setCoachTip(
+      first?.action ||
+        first?.why ||
+        nextPlan.reminder ||
+        "Начните разговор спокойно и по делу — как решили в плане.",
+    );
+    setTryPhrase(withPhrase?.phrase || openingPhrase);
+    setSignals(
+      nextPlan.steps.slice(0, 3).map((s) => s.title).filter(Boolean),
+    );
+    setFeedback(first?.avoid ? `Не стоит: ${first.avoid}` : "");
+  };
+
+  const startRehearsal = () => {
     if (!plan) return;
     setView("rehearsal");
-    setMessages([{ role: "parent", text: openingPhrase }]);
-    setCoachTip("");
-    setTryPhrase("");
-    setSignals([]);
-    setFeedback("");
+    setMessages([]);
+    setReply("");
     setRehearseError("");
-    setRehearseLoading(true);
-    try {
-      const res = await fetch("/api/rehearse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic,
-          situation,
-          goalKind,
-          goalText,
-          age,
-          reaction,
-          planTitle: plan.title,
-          openingPhrase,
-          messages: [{ role: "parent", text: openingPhrase }],
-          parentReply: "",
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Не удалось начать репетицию");
-      setMessages([
-        { role: "parent", text: openingPhrase },
-        { role: "child", text: data.childMessage },
-      ]);
-      setCoachTip(data.coachTip || "");
-      setTryPhrase(data.tryPhrase || "");
-      setSignals(data.signals || []);
-      setFeedback(data.feedback || "");
-    } catch (e) {
-      setRehearseError(e instanceof Error ? e.message : "Ошибка репетиции");
-    } finally {
-      setRehearseLoading(false);
-    }
+    setRehearseLoading(false);
+    seedRehearsalCoach(plan);
   };
 
   const sendReply = async () => {
@@ -676,7 +658,7 @@ export default function Home() {
           <button
             type="button"
             className="rehearse-button"
-            onClick={() => void startRehearsal()}
+            onClick={startRehearsal}
           >
             Начать репетицию
           </button>
@@ -821,21 +803,31 @@ export default function Home() {
   function Rehearsal() {
     return (
       <section className="rehearsal-wrap">
-        <button className="back rehearsal-back" onClick={() => setView("plan")}>
-          Вернуться к плану
-        </button>
         <div className="rehearsal-grid">
           <div className="chat-card">
             <div className="chat-head">
               <div>
-                <div className="live">Репетиция</div>
                 <h1>{plan?.title || "Разговор"}</h1>
+                <div className="chat-goal">
+                  <span className="goal-badge-label">Цель разговора</span>
+                  <p>{resolvedGoal}</p>
+                </div>
               </div>
-            </div>
-            <div className="scenario">
-              ИИ отвечает за ребёнка с учётом возраста, цели и привычной реакции.
+              <button
+                type="button"
+                className="text-action chat-to-plan"
+                onClick={() => setView("plan")}
+              >
+                К плану
+              </button>
             </div>
             <div className="messages">
+              {messages.length === 0 && !rehearseLoading && (
+                <div className="messages-empty">
+                  Начните разговор сами — напишите первую фразу так, как сказали бы
+                  ребёнку.
+                </div>
+              )}
               {messages.map((m, i) => (
                 <div
                   key={`${m.role}-${i}`}
@@ -856,7 +848,7 @@ export default function Home() {
             <div className="composer">
               <textarea
                 rows={2}
-                placeholder="Ответьте своими словами…"
+                placeholder="Начните разговор своими словами…"
                 value={reply}
                 disabled={rehearseLoading}
                 onChange={(e) => setReply(e.target.value)}
@@ -881,26 +873,34 @@ export default function Home() {
             <div className="coach-title">
               <span>✦</span>
               <div>
-                <b>Подсказка помощника</b>
+                <b>Подсказки по плану</b>
                 <small>видите только вы</small>
               </div>
             </div>
             <p>
               {coachTip ||
-                "Отправьте реплику — появится подсказка под текущий момент разговора."}
+                "Опирайтесь на шаги плана: спокойный тон, ясные границы, без обвинений."}
             </p>
             {tryPhrase && (
               <div className="try">
-                <span>Можно попробовать</span>
+                <span>Можно начать так</span>
                 <p>«{tryPhrase}»</p>
+                <button
+                  type="button"
+                  className="text-action"
+                  disabled={rehearseLoading}
+                  onClick={() => setReply(tryPhrase)}
+                >
+                  Вставить в ответ
+                </button>
               </div>
             )}
             {signals.length > 0 && (
               <div className="signals">
-                <b>Что тренируем</b>
-                {signals.map((s, i) => (
+                <b>Шаги из плана</b>
+                {signals.map((s) => (
                   <div key={s}>
-                    <span>{i === 0 ? "✓" : "○"}</span>
+                    <span>○</span>
                     {s}
                   </div>
                 ))}
@@ -908,7 +908,7 @@ export default function Home() {
             )}
             {feedback && (
               <div className="feedback">
-                <b>Короткая обратная связь</b>
+                <b>Короткая заметка</b>
                 <p>{feedback}</p>
               </div>
             )}
