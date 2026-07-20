@@ -218,7 +218,7 @@ export default function Home() {
       topic,
       situation,
       goalKind,
-      goalText,
+      goalText: plan.goal || goalText || deriveSituationGoal(situation, goalKind, goalText),
       age,
       reaction,
       plan,
@@ -658,7 +658,7 @@ export default function Home() {
           <span className="plan-number">{Number(n)}</span>
           <span className="plan-step-copy">
             <b>{title}</b>
-            <small>{preview}</small>
+            {!open && <small>{preview}</small>}
           </span>
           <span className="plan-more">
             {open ? "Свернуть" : "Подробнее"}
@@ -667,9 +667,7 @@ export default function Home() {
         </button>
         {open && (
           <div className="plan-step-body">
-            {planStep.action && <p className="step-instruction">{planStep.action}</p>}
-
-            {hasScenario && (
+            {hasScenario ? (
               <div className="scenario-card">
                 <div className="scenario-card-title">Как может пройти разговор</div>
                 <div className="scenario-flow">
@@ -725,6 +723,8 @@ export default function Home() {
                   </button>
                 )}
               </div>
+            ) : (
+              planStep.action && <p className="step-instruction">{planStep.action}</p>
             )}
 
             {planStep.avoid && (
@@ -754,8 +754,6 @@ export default function Home() {
                 </p>
               </div>
             )}
-
-            {planStep.outcome && <p className="step-outcome">{planStep.outcome}</p>}
           </div>
         )}
       </article>
