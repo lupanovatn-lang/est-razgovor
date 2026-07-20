@@ -583,21 +583,6 @@ export default function Home() {
           })}
         </div>
 
-        {(plan.nonNegotiable || plan.discussable) && (
-          <div className="boundary-inline">
-            {plan.nonNegotiable && (
-              <p>
-                <b>Не обсуждается:</b> {plan.nonNegotiable}
-              </p>
-            )}
-            {plan.discussable && (
-              <p>
-                <b>Можно вместе:</b> {plan.discussable}
-              </p>
-            )}
-          </div>
-        )}
-
         <div className="plan-bottom-actions">
           <button type="button" className="text-action" onClick={focusSettings}>
             Изменить запрос
