@@ -94,7 +94,7 @@ export default function Home() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
-  const [openPlanStep, setOpenPlanStep] = useState("01");
+  const [openPlanStep, setOpenPlanStep] = useState("");
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -145,7 +145,7 @@ export default function Home() {
     setPlanSource(null);
     setPlanWarning("");
     setPlanError("");
-    setOpenPlanStep("01");
+    setOpenPlanStep("");
     setMoreReactions({});
     setMessages([]);
     setReply("");
@@ -199,7 +199,7 @@ export default function Home() {
       if (nextPlan.goal && isGenericGoalText(goalText)) {
         setGoalText(nextPlan.goal);
       }
-      setOpenPlanStep("01");
+      setOpenPlanStep("");
       setMoreReactions({});
       setView("plan");
     } catch (e) {
@@ -243,7 +243,7 @@ export default function Home() {
     setPlan(item.plan);
     setPlanSource("openai");
     setPlanWarning("");
-    setOpenPlanStep("01");
+    setOpenPlanStep("");
     setMessages([]);
     setView("plan");
   };
