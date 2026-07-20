@@ -365,10 +365,10 @@ button { color: inherit; }
 }
 .rehearse-invite-copy p {
   margin: 0;
-  max-width: 40ch;
   color: #7c8099;
   font-size: 14px;
   line-height: 1.45;
+  white-space: nowrap;
 }
 .rehearse-invite .rehearse-button {
   width: auto;
