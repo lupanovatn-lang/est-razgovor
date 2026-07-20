@@ -940,56 +940,29 @@ export default function Home() {
               const tipText =
                 coachTip ||
                 (messages.length === 0
-                  ? "Скажите первую фразу — своими словами или из подсказки"
+                  ? "Напишите в чат своими словами или нажмите «В чат»"
                   : "");
               const tipPhrase =
                 tryPhrase ||
                 (messages.length === 0 ? focusStep?.phrase || "" : "") ||
-                focusStep?.phrase ||
                 "";
               const avoid = focusStep?.avoid?.trim() || "";
-              const upcoming = steps.slice(focusIndex + 1);
 
               return (
                 <>
                   <div className="coach-title">
                     <div>
                       <b>Тренажёр</b>
-                      <small>Только текущий ход — без лишнего</small>
+                      <small>
+                        Шаг {total ? focusIndex + 1 : 0} из {total}
+                      </small>
                     </div>
                   </div>
 
-                  <ol className="coach-rail" aria-label="Прогресс разговора">
-                    {steps.map((step, i) => {
-                      const done = i < focusIndex;
-                      const current = i === focusIndex;
-                      return (
-                        <li
-                          key={`${step.title}-${i}`}
-                          className={[
-                            "coach-rail-item",
-                            done ? "done" : "",
-                            current ? "current" : "",
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        >
-                          <span className="coach-rail-mark" aria-hidden="true">
-                            {done ? "✓" : i + 1}
-                          </span>
-                          <span className="coach-rail-label">{step.title}</span>
-                        </li>
-                      );
-                    })}
-                  </ol>
-
-                  {focusStep && (
+                  {focusStep ? (
                     <div className="coach-now">
                       <div className="coach-now-top">
                         <span>Ваш ход</span>
-                        <span className="coach-now-n">
-                          {focusIndex + 1} из {total}
-                        </span>
                       </div>
                       <p className="coach-now-title">{focusStep.title}</p>
                       {tipText ? <p className="coach-now-tip">{tipText}</p> : null}
@@ -1003,25 +976,34 @@ export default function Home() {
                           <span>«{tipPhrase}»</span>
                           <em>В чат</em>
                         </button>
-                      ) : (
-                        <p className="coach-now-tip">
-                          Сформулируйте этот шаг своими словами в чате.
-                        </p>
-                      )}
+                      ) : null}
                       {avoid ? <p className="coach-avoid">Не: {avoid}</p> : null}
                     </div>
-                  )}
+                  ) : null}
 
-                  {upcoming.length > 0 && (
-                    <div className="coach-next">
-                      <span>Потом</span>
-                      <ul>
-                        {upcoming.map((step) => (
-                          <li key={step.title}>{step.title}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {total > 0 ? (
+                    <ol className="coach-dots" aria-label="Прогресс по плану">
+                      {steps.map((step, i) => {
+                        const done = i < focusIndex;
+                        const current = i === focusIndex;
+                        return (
+                          <li
+                            key={`${step.title}-${i}`}
+                            className={[
+                              "coach-dot",
+                              done ? "done" : "",
+                              current ? "current" : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                            title={step.title}
+                          >
+                            <span>{done ? "✓" : i + 1}</span>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  ) : null}
                 </>
               );
             })()}
