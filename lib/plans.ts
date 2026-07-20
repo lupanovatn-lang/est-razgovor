@@ -23,6 +23,8 @@ export type PlanStep = {
 
 export type ConversationPlan = {
   title: string;
+  /** Concrete goal for this situation — not the base goal label */
+  goal?: string;
   reminder: string;
   steps: PlanStep[];
   nonNegotiable?: string;
@@ -41,6 +43,69 @@ export const goalOptions: { id: GoalKind; label: string }[] = [
 
 export const goalLabel = (kind: GoalKind) =>
   goalOptions.find((g) => g.id === kind)?.label ?? "Другое";
+
+/** True when the field is empty or just repeats a base goal option. */
+export function isGenericGoalText(text: string): boolean {
+  const t = text.trim();
+  if (!t) return true;
+  return goalOptions.some((g) => g.label.toLowerCase() === t.toLowerCase());
+}
+
+/**
+ * Formulate a concrete goal from the situation + base goal kind
+ * when the parent did not write their own result.
+ */
+export function deriveSituationGoal(
+  situation: string,
+  kind: GoalKind,
+  goalText = "",
+): string {
+  if (goalText.trim() && !isGenericGoalText(goalText)) {
+    return goalText.trim().replace(/\s+/g, " ");
+  }
+
+  const s = situation.toLowerCase();
+  const phone = /телефон|гаджет|экран|комп|игр/.test(s);
+  const night = /ноч|допоздн|утра|спать|сн|отбой|22|23/.test(s);
+  const grade = /двойк|тройк|оценк/.test(s);
+  const lied = /скрыл|соврал|обман|не сказал|лож/.test(s);
+  const chores = /обязан|уборк|дом/.test(s);
+  const late = /опозда/.test(s);
+  const friends = /друг|друз/.test(s);
+  const school = /школ/.test(s);
+
+  switch (kind) {
+    case "boundary":
+      if (phone && night) return "Обозначить границу: без гаджетов на ночь";
+      if (phone) return "Обозначить границу по использованию гаджетов";
+      if (chores) return "Обозначить границу по домашним обязанностям";
+      if (late) return "Обозначить границу: без опозданий";
+      return "Обозначить вашу границу в этой ситуации";
+    case "agree":
+      if (phone && night) return "Договориться о правиле: гаджеты убираем до сна";
+      if (phone) return "Договориться о правиле по экранному времени";
+      if (chores) return "Договориться о правиле по домашним делам";
+      if (late) return "Договориться, как убрать опоздания";
+      return "Договориться о понятном правиле на эту ситуацию";
+    case "understand":
+      if (grade && lied) return "Понять, почему ребёнок скрыл оценку";
+      if (lied) return "Понять, почему ребёнок не сказал правду";
+      if (phone) return "Понять, почему гаджеты важнее режима";
+      return "Понять, почему ребёнок так поступил в этой ситуации";
+    case "announce":
+      if (school) return "Сообщить решение о школе спокойно и ясно";
+      return "Сообщить принятое решение и объяснить, что дальше";
+    case "support":
+      if (friends) return "Поддержать ребёнка в ситуации с друзьями";
+      return "Поддержать ребёнка и дать пространство рассказать";
+    case "trust":
+      if (grade || lied) return "Восстановить доверие после сокрытия правды";
+      return "Восстановить доверие и договориться говорить честно";
+    default:
+      if (phone && night) return "Разобрать ночное использование гаджетов";
+      return "Прийти к ясному следующему шагу по этой ситуации";
+  }
+}
 
 /** Heuristic suggestion from situation text — parent must confirm. */
 export function suggestGoalKind(situation: string, topic: string): GoalKind {
@@ -549,22 +614,33 @@ function buildOtherPlan(ctx: BuildCtx): ConversationPlan {
 }
 
 export function buildPlan(kind: GoalKind, ctx: BuildCtx): ConversationPlan {
+  let plan: ConversationPlan;
   switch (kind) {
     case "understand":
-      return buildUnderstandPlan(ctx);
+      plan = buildUnderstandPlan(ctx);
+      break;
     case "agree":
-      return buildAgreePlan(ctx);
+      plan = buildAgreePlan(ctx);
+      break;
     case "boundary":
-      return buildBoundaryPlan(ctx);
+      plan = buildBoundaryPlan(ctx);
+      break;
     case "announce":
-      return buildAnnouncePlan(ctx);
+      plan = buildAnnouncePlan(ctx);
+      break;
     case "support":
-      return buildSupportPlan(ctx);
+      plan = buildSupportPlan(ctx);
+      break;
     case "trust":
-      return buildTrustPlan(ctx);
+      plan = buildTrustPlan(ctx);
+      break;
     default:
-      return buildOtherPlan(ctx);
+      plan = buildOtherPlan(ctx);
   }
+  return {
+    ...plan,
+    goal: deriveSituationGoal(ctx.situation, kind, ctx.goalText),
+  };
 }
 
 export type ScenarioPreset = {

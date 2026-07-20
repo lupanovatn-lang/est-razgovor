@@ -1,5 +1,5 @@
 import type { ConversationPlan, GoalKind } from "./plans";
-import { goalLabel } from "./plans";
+import { deriveSituationGoal, goalLabel, isGenericGoalText } from "./plans";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL =
@@ -99,9 +99,17 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
 - Примеры хороших title: «Ночи за компьютером», «Телефон до утра», «Скрытая двойка», «Домашние обязанности», «Опоздания из‑за игр».
 - Примеры плохих title: «Гаджеты и интернет», «Учёба», «Правила дома», «Как договориться о телефоне».
 
+Важно про цель (goal):
+- goal — конкретная формулировка желаемого результата ЭТОГО разговора.
+- Если родитель написал результат своими словами — уточни и сделай короткой ясной целью, не копируй длинный абзац.
+- Если родитель выбрал только базовый тип цели («Обозначить границу», «Договориться о правиле…» и т.п.) и не дописал свой текст — сформулируй цель из ситуации + типа цели.
+- Не возвращай голые базовые ярлыки вроде «Обозначить границу» без конкретики.
+- Примеры: «Обозначить границу: без телефона после 22:00», «Договориться убирать гаджеты до сна», «Понять, почему скрыл двойку».
+
 Верни ТОЛЬКО JSON:
 {
   "title": string, // тема разговора, без повторения цели
+  "goal": string, // конкретная цель разговора по ситуации
   "reminder": string, // короткое напоминание под цель
   "nonNegotiable": string | null, // что не обсуждается; null если не нужно
   "discussable": string | null, // что можно решить вместе; null если не нужно
@@ -127,14 +135,16 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
 - trust: факт без ярлыков → версия → причина → влияние на доверие → исправление → договорённость о правде`;
 
 export function planUserPrompt(input: PlanRequest) {
+  const customGoal = input.goalText.trim() && !isGenericGoalText(input.goalText);
   return `Тема: ${input.topic}
 Возраст ребёнка: ${input.age || "не указан"} лет
 Ситуация: ${input.situation}
-Тип цели: ${input.goalKind} (${goalLabel(input.goalKind)})
-Цель своими словами: ${input.goalText || goalLabel(input.goalKind)}
+Тип цели (базовый): ${input.goalKind} (${goalLabel(input.goalKind)})
+Результат своими словами: ${customGoal ? input.goalText.trim() : "не указан — сформулируй goal сама по ситуации и типу цели"}
 Привычная реакция ребёнка: ${input.reaction}
 
-Заголовок плана (title) сформулируй по тексту ситуации («Что случилось»), а не копируй категорию темы. Не повторяй цель.`;
+Заголовок плана (title) сформулируй по тексту ситуации («Что случилось»), а не копируй категорию темы.
+Поле goal — конкретная цель разговора: из ситуации + типа цели${customGoal ? ", опираясь на формулировку родителя" : ""}. Не копируй базовый ярлык цели.`;
 }
 
 const TOPIC_CATEGORIES = [
@@ -193,9 +203,25 @@ export function finalizePlanTitle(
   return next;
 }
 
+export function finalizePlanGoal(
+  goal: string | undefined,
+  situation: string,
+  goalKind: GoalKind,
+  goalText: string,
+): string {
+  const raw = String(goal || "").trim().replace(/\s+/g, " ");
+  if (raw && !isGenericGoalText(raw) && raw.length >= 8) return raw;
+  return deriveSituationGoal(situation, goalKind, goalText);
+}
+
 export function normalizePlan(
   raw: ConversationPlan,
-  ctx?: { situation?: string; topic?: string },
+  ctx?: {
+    situation?: string;
+    topic?: string;
+    goalKind?: GoalKind;
+    goalText?: string;
+  },
 ): ConversationPlan {
   const steps = (raw.steps || []).slice(0, 6).map((s) => ({
     title: String(s.title || "").trim(),
@@ -222,8 +248,18 @@ export function normalizePlan(
     ? finalizePlanTitle(rawTitle, ctx.situation || "", ctx.topic || "")
     : sanitizePlanTitle(rawTitle);
 
+  const goal = ctx?.goalKind
+    ? finalizePlanGoal(
+        raw.goal,
+        ctx.situation || "",
+        ctx.goalKind,
+        ctx.goalText || "",
+      )
+    : String(raw.goal || "").trim() || undefined;
+
   return {
     title,
+    goal,
     reminder: String(raw.reminder || "").trim(),
     nonNegotiable: raw.nonNegotiable
       ? String(raw.nonNegotiable).trim()

@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  deriveSituationGoal,
   goalLabel,
   goalOptions,
+  isGenericGoalText,
   suggestGoalKind,
   type ConversationPlan,
   type GoalKind,
@@ -159,10 +161,12 @@ export default function Home() {
   const selectGoal = (kind: GoalKind) => {
     setGoalTouched(true);
     setGoalKind(kind);
-    if (!goalText.trim() || goalOptions.some((g) => g.label === goalText)) {
-      setGoalText(goalLabel(kind));
-    }
+    // Don't copy the base goal label into the custom field.
+    if (isGenericGoalText(goalText)) setGoalText("");
   };
+
+  const resolvedGoal =
+    plan?.goal || deriveSituationGoal(situation, goalKind, goalText);
 
   const generatePlan = async () => {
     if (!situation.trim()) {
@@ -192,6 +196,10 @@ export default function Home() {
         data.source === "openai" || data.source === "openrouter" ? "openai" : "fallback",
       );
       setPlanWarning(data.warning || "");
+      const nextPlan = data.plan as ConversationPlan;
+      if (nextPlan.goal && isGenericGoalText(goalText)) {
+        setGoalText(nextPlan.goal);
+      }
       setOpenPlanStep("01");
       setMoreReactions({});
       setView("plan");
@@ -246,7 +254,7 @@ export default function Home() {
     const lines = [
       plan.title,
       "",
-      `Цель: ${goalText || goalLabel(goalKind)}`,
+      `Цель: ${resolvedGoal}`,
       `Тема: ${topic}`,
       `Возраст: ${childName}`,
       "",
@@ -444,7 +452,7 @@ export default function Home() {
             value={goalText}
             onChange={(e) => setGoalText(e.target.value)}
             rows={2}
-            placeholder="Например: договориться о телефоне после 22:30"
+            placeholder="Необязательно — если пусто, сформулируем по ситуации"
           />
 
           <div className="settings-row">
@@ -533,7 +541,7 @@ export default function Home() {
             </span>
             <span>
               <span className="goal-badge-label">Цель разговора</span>
-              {goalText || goalLabel(goalKind)}
+              {resolvedGoal}
             </span>
           </div>
         </header>
@@ -584,7 +592,7 @@ export default function Home() {
             </span>
             <span>
               <span className="goal-badge-label">Цель разговора</span>
-              {goalText || goalLabel(goalKind)}
+              {resolvedGoal}
             </span>
           </div>
           {planWarning && <p className="plan-warning">{planWarning}</p>}

@@ -48,6 +48,8 @@ export async function POST(request: Request) {
     const plan = normalizePlan(raw, {
       situation: input.situation,
       topic: input.topic,
+      goalKind: input.goalKind,
+      goalText: input.goalText,
     });
     if (plan.steps.length < 3) {
       return Response.json({
