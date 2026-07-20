@@ -76,14 +76,28 @@ type BuildCtx = {
 };
 
 function topicTitle(ctx: BuildCtx, fallback: string) {
-  const text = `${ctx.situation} ${ctx.goalText} ${ctx.topic}`.toLowerCase();
-  if (/телефон|гаджет/.test(text)) return "Телефон перед сном";
+  const text = `${ctx.situation} ${ctx.goalText}`.toLowerCase();
+  if (/телефон/.test(text) && /(ноч|допоздн|утра|спать)/.test(text)) {
+    return "Телефон по ночам";
+  }
+  if (/(комп|компьютер|игр)/.test(text) && /(ноч|допоздн|утра)/.test(text)) {
+    return "Ночи за компьютером";
+  }
+  if (/телефон|гаджет/.test(text)) return "Телефон и экранное время";
   if (/двойк|тройк|оценк/.test(text)) return "Скрытая оценка";
-  if (/обязан|уборк|дом/.test(text)) return "Домашние обязанности";
-  if (/компьютер|игр/.test(text)) return "Компьютер по ночам";
-  if (/школ/.test(text)) return "Смена школы";
+  if (/обязан|уборк/.test(text)) return "Домашние обязанности";
+  if (/опозда/.test(text)) return "Опоздания";
   if (/друг|друз/.test(text)) return "Конфликт с друзьями";
-  if (ctx.topic && ctx.topic !== "Другое") return ctx.topic;
+  if (/школ/.test(text)) return "Смена школы";
+
+  const first = ctx.situation.trim().split(/[.!?\n]/)[0]?.trim() || "";
+  if (first && first.length >= 8 && first.toLowerCase() !== ctx.topic.toLowerCase()) {
+    const short =
+      first.length > 52
+        ? `${first.slice(0, 49).replace(/\s+\S*$/, "")}…`
+        : first;
+    return short.charAt(0).toUpperCase() + short.slice(1);
+  }
   return fallback;
 }
 

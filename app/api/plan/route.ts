@@ -45,7 +45,10 @@ export async function POST(request: Request) {
       temperature: 0.55,
     });
 
-    const plan = normalizePlan(raw);
+    const plan = normalizePlan(raw, {
+      situation: input.situation,
+      topic: input.topic,
+    });
     if (plan.steps.length < 3) {
       return Response.json({
         plan: buildPlan(input.goalKind, input),

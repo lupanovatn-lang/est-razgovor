@@ -93,11 +93,11 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
 План: от 3 до 6 шагов. Без драматичных формулировок вроде «борьба за власть», если родитель так не писал.
 
 Важно про заголовок (title):
-- title отражает ТЕМУ / предмет разговора по ситуации, а НЕ цель.
+- title берётся из описания ситуации («Что случилось»), а НЕ копируется из поля «Тема» (Гаджеты и интернет / Учёба / …).
+- title отражает предмет конкретной ситуации коротко и по-человечески.
 - Цель уже показывается отдельно, поэтому не начинай title с «Как договориться…», «Как понять…», «Как обозначить…», «Как поддержать…», «Как сообщить…», «Как восстановить…».
-- Формулируй коротко и по-человечески: о чём разговор.
-- Примеры хороших title: «Домашние обязанности», «Телефон перед сном», «Скрытая оценка», «Компьютер по ночам», «Конфликт с друзьями», «Смена школы».
-- Примеры плохих title: «Как договориться о распределении домашних обязанностей», «Как обозначить границу: со мной так нельзя».
+- Примеры хороших title: «Ночи за компьютером», «Телефон до утра», «Скрытая двойка», «Домашние обязанности», «Опоздания из‑за игр».
+- Примеры плохих title: «Гаджеты и интернет», «Учёба», «Правила дома», «Как договориться о телефоне».
 
 Верни ТОЛЬКО JSON:
 {
@@ -134,10 +134,69 @@ export function planUserPrompt(input: PlanRequest) {
 Цель своими словами: ${input.goalText || goalLabel(input.goalKind)}
 Привычная реакция ребёнка: ${input.reaction}
 
-Заголовок плана (title) должен назвать тему/предмет разговора по ситуации, а не пересказывать цель.`;
+Заголовок плана (title) сформулируй по тексту ситуации («Что случилось»), а не копируй категорию темы. Не повторяй цель.`;
 }
 
-export function normalizePlan(raw: ConversationPlan): ConversationPlan {
+const TOPIC_CATEGORIES = [
+  "Гаджеты и интернет",
+  "Учёба",
+  "Правила дома",
+  "Друзья",
+  "Деньги",
+  "Другое",
+];
+
+export function deriveSituationTitle(situation: string, topic = ""): string {
+  const raw = situation.trim().replace(/\s+/g, " ");
+  const lower = raw.toLowerCase();
+
+  if (/телефон/.test(lower) && /(ноч|допоздн|утра|спать|сн)/.test(lower)) {
+    return "Телефон по ночам";
+  }
+  if (/(комп|компьютер|игр)/.test(lower) && /(ноч|допоздн|утра)/.test(lower)) {
+    return "Ночи за компьютером";
+  }
+  if (/телефон|гаджет/.test(lower)) return "Телефон и экранное время";
+  if (/двойк|тройк|оценк/.test(lower) && /(скрыл|соврал|сказал)/.test(lower)) {
+    return "Скрытая оценка";
+  }
+  if (/обязан|уборк/.test(lower)) return "Домашние обязанности";
+  if (/опозда/.test(lower)) return "Опоздания";
+  if (/друг|друз/.test(lower)) return "Конфликт с друзьями";
+  if (/школ/.test(lower) && /смен|перев|друг/.test(lower)) return "Смена школы";
+
+  let short = raw.split(/[.!?\n]/)[0]?.trim() || raw;
+  short = short
+    .replace(/^(у\s+меня\s+)?(сын|дочь|ребёнок|ребенок|он|она)\s+/i, "")
+    .replace(/^(что|просто)\s+/i, "");
+  if (short.length > 52) {
+    short = `${short.slice(0, 49).replace(/\s+\S*$/, "")}…`;
+  }
+  if (!short || TOPIC_CATEGORIES.some((t) => t.toLowerCase() === short.toLowerCase())) {
+    return topic && topic !== "Другое" ? `Разговор про ${topic.toLowerCase()}` : "Сложный разговор";
+  }
+  return short.charAt(0).toUpperCase() + short.slice(1);
+}
+
+export function finalizePlanTitle(
+  title: string,
+  situation: string,
+  topic: string,
+): string {
+  let next = sanitizePlanTitle(title);
+  const isCategory =
+    TOPIC_CATEGORIES.some((t) => t.toLowerCase() === next.toLowerCase()) ||
+    next.toLowerCase() === topic.toLowerCase();
+  if (!next || isCategory || next.length < 3) {
+    next = deriveSituationTitle(situation, topic);
+  }
+  return next;
+}
+
+export function normalizePlan(
+  raw: ConversationPlan,
+  ctx?: { situation?: string; topic?: string },
+): ConversationPlan {
   const steps = (raw.steps || []).slice(0, 6).map((s) => ({
     title: String(s.title || "").trim(),
     why: String(s.why || "").trim(),
@@ -158,8 +217,13 @@ export function normalizePlan(raw: ConversationPlan): ConversationPlan {
     outcome: s.outcome ? String(s.outcome).trim() : undefined,
   }));
 
+  const rawTitle = String(raw.title || "План разговора").trim();
+  const title = ctx
+    ? finalizePlanTitle(rawTitle, ctx.situation || "", ctx.topic || "")
+    : sanitizePlanTitle(rawTitle);
+
   return {
-    title: sanitizePlanTitle(String(raw.title || "План разговора").trim()),
+    title,
     reminder: String(raw.reminder || "").trim(),
     nonNegotiable: raw.nonNegotiable
       ? String(raw.nonNegotiable).trim()
