@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   deriveSituationGoal,
   goalLabel,
@@ -120,6 +120,7 @@ export default function Home() {
   const [openedFromLibrary, setOpenedFromLibrary] = useState(false);
   const [paramsUnlocked, setParamsUnlocked] = useState(false);
   const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<number | null>(null);
   const [openPlanStep, setOpenPlanStep] = useState("");
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
@@ -362,6 +363,12 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current != null) window.clearTimeout(copiedTimer.current);
+    };
+  }, []);
+
   const copyPlan = async () => {
     if (!plan) return;
     const lines = [
@@ -382,6 +389,11 @@ export default function Home() {
     if (plan.discussable) lines.push(`Что можно решить вместе: ${plan.discussable}`);
     await navigator.clipboard?.writeText(lines.join("\n"));
     setCopied(true);
+    if (copiedTimer.current != null) window.clearTimeout(copiedTimer.current);
+    copiedTimer.current = window.setTimeout(() => {
+      setCopied(false);
+      copiedTimer.current = null;
+    }, 2000);
   };
 
   const openingPhrase =
@@ -741,7 +753,7 @@ export default function Home() {
                 Сохранить
               </button>
             ))}
-          {openedFromLibrary || !copied ? (
+          {!copied ? (
             <button type="button" className="text-action" onClick={copyPlan}>
               Копировать
             </button>
