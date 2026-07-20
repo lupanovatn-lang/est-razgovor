@@ -868,7 +868,7 @@ export default function Home() {
         </button>
         <button type="button" className="header-new" onClick={resetNew}>
           <img src="/plus.svg" alt="" />
-          Новый разговор
+          Новый план
         </button>
       </header>
 
