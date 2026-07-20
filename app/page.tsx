@@ -117,6 +117,7 @@ export default function Home() {
   const [generating, setGenerating] = useState(false);
   const [savedList, setSavedList] = useState<SavedConversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [openedFromLibrary, setOpenedFromLibrary] = useState(false);
   const [paramsUnlocked, setParamsUnlocked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
@@ -168,6 +169,7 @@ export default function Home() {
 
   const resetNew = () => {
     setActiveId(null);
+    setOpenedFromLibrary(false);
     setParamsUnlocked(false);
     setTopic("Гаджеты и интернет");
     setAge("");
@@ -202,7 +204,7 @@ export default function Home() {
 
   const resolvedGoal =
     plan?.goal || deriveSituationGoal(situation, goalKind, goalText);
-  const paramsLocked = !!activeId && !paramsUnlocked;
+  const paramsLocked = openedFromLibrary && !paramsUnlocked;
 
   const requestUnlockParams = () => {
     if (!paramsLocked) return true;
@@ -300,6 +302,7 @@ export default function Home() {
 
   const openSaved = (item: SavedConversation) => {
     setActiveId(item.id);
+    setOpenedFromLibrary(true);
     setParamsUnlocked(false);
     setTopic(item.topic);
     setSituation(item.situation);
@@ -320,7 +323,11 @@ export default function Home() {
     const next = savedList.filter((x) => x.id !== id);
     setSavedList(next);
     persistSaved(next);
-    if (activeId === id) setActiveId(null);
+    if (activeId === id) {
+      setActiveId(null);
+      setOpenedFromLibrary(false);
+      setParamsUnlocked(false);
+    }
   };
 
   const formatSavedDate = (ts: number) => {
@@ -452,7 +459,7 @@ export default function Home() {
                 </button>
               </div>
             </div>
-          ) : activeId ? (
+          ) : openedFromLibrary ? (
             <p className="settings-lead">
               Измените параметры, затем нажмите «Обновить план».
             </p>
