@@ -370,18 +370,20 @@ export default function Home() {
           {savedList.length > 0 && (
             <div className="settings-saved">
               <span className="field-label">Сохранённые</span>
-              <div className="saved-pills">
+              <ul className="saved-list">
                 {savedList.slice(0, 5).map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={activeId === item.id ? "saved-pill active" : "saved-pill"}
-                    onClick={() => openSaved(item)}
-                  >
-                    {item.title}
-                  </button>
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      className={activeId === item.id ? "saved-item active" : "saved-item"}
+                      onClick={() => openSaved(item)}
+                    >
+                      <b>{item.title}</b>
+                      <small>{item.goalText || item.topic}</small>
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
 
