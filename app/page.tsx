@@ -93,6 +93,7 @@ export default function Home() {
   const [generating, setGenerating] = useState(false);
   const [savedList, setSavedList] = useState<SavedConversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [paramsUnlocked, setParamsUnlocked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
@@ -137,6 +138,7 @@ export default function Home() {
 
   const resetNew = () => {
     setActiveId(null);
+    setParamsUnlocked(false);
     setTopic("Гаджеты и интернет");
     setAge("");
     setSituation("");
@@ -169,8 +171,19 @@ export default function Home() {
 
   const resolvedGoal =
     plan?.goal || deriveSituationGoal(situation, goalKind, goalText);
+  const paramsLocked = !!activeId && !paramsUnlocked;
+
+  const requestUnlockParams = () => {
+    if (!paramsLocked) return true;
+    const ok = window.confirm(
+      "Вы уверены, что хотите изменить параметры и обновить план?",
+    );
+    if (ok) setParamsUnlocked(true);
+    return ok;
+  };
 
   const generatePlan = async () => {
+    if (paramsLocked && !requestUnlockParams()) return;
     if (!situation.trim()) {
       setPlanError("Опишите ситуацию");
       return;
@@ -232,10 +245,12 @@ export default function Home() {
     setActiveId(item.id);
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1600);
+    setParamsUnlocked(false);
   };
 
   const openSaved = (item: SavedConversation) => {
     setActiveId(item.id);
+    setParamsUnlocked(false);
     setTopic(item.topic);
     setSituation(item.situation);
     setGoalKind(item.goalKind);
@@ -383,13 +398,36 @@ export default function Home() {
 
   function SettingsPanel() {
     return (
-      <aside className="settings-panel">
+      <aside className={paramsLocked ? "settings-panel locked" : "settings-panel"}>
         <div className="settings-scroll">
           <h2>Параметры разговора</h2>
-          <p className="settings-lead">
-            Опишите ситуацию и цель — справа появится план.
-          </p>
+          {paramsLocked ? (
+            <div className="settings-lock-banner">
+              <span className="settings-lock-icon" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <rect x="3" y="6" width="8" height="6.5" rx="1.4" stroke="currentColor" strokeWidth="1.4" />
+                  <path
+                    d="M4.8 6V4.6a2.2 2.2 0 0 1 4.4 0V6"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+              <div>
+                <p>Сохранённый план — параметры заблокированы</p>
+                <button type="button" className="text-action" onClick={requestUnlockParams}>
+                  Изменить и обновить план
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="settings-lead">
+              Опишите ситуацию и цель — справа появится план.
+            </p>
+          )}
 
+          <fieldset className="settings-fields" disabled={paramsLocked}>
           <label className="field-label" htmlFor="topic">
             Тема
           </label>
@@ -441,7 +479,7 @@ export default function Home() {
               ))}
             </select>
           </div>
-          {!goalTouched && situation.trim() && (
+          {!paramsLocked && !goalTouched && situation.trim() && (
             <p className="settings-hint">
               Предложили по описанию: {goalLabel(suggested)}. Можно изменить.
             </p>
@@ -493,6 +531,7 @@ export default function Home() {
               ))}
             </select>
           </div>
+          </fieldset>
 
           {planError && <div className="form-error">{planError}</div>}
         </div>
@@ -504,7 +543,13 @@ export default function Home() {
             disabled={generating || !situation.trim()}
             onClick={() => void generatePlan()}
           >
-            {generating ? "Составляем…" : plan ? "Обновить план" : "+ Составить план"}
+            {generating
+              ? "Составляем…"
+              : paramsLocked
+                ? "Обновить план"
+                : plan
+                  ? "Обновить план"
+                  : "+ Составить план"}
           </button>
           <p className="settings-privacy">
             Описание используется только для составления плана
@@ -574,6 +619,7 @@ export default function Home() {
     if (!plan) return null;
 
     const focusSettings = () => {
+      if (paramsLocked && !requestUnlockParams()) return;
       const el = document.getElementById("situation");
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
       el?.focus();

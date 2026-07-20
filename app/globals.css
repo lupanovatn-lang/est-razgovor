@@ -150,7 +150,60 @@ button { color: inherit; }
 .app-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 340px minmax(0, 1fr); }
 .app-shell.rehearsal-mode .app-body { grid-template-columns: 1fr; }
 
-.settings-panel { display: flex; flex-direction: column; min-height: 0; background: #f1f2fd; border-right: 1px solid #e5e6f3; }
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #f1f2fd;
+  border-right: 1px solid #e5e6f3;
+}
+.settings-fields {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.settings-fields:disabled {
+  opacity: .62;
+  pointer-events: none;
+}
+.settings-lock-banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 0 14px;
+  padding: 12px 12px 10px;
+  border-radius: 12px;
+  background: #e8e9f6;
+  color: #4a4e63;
+}
+.settings-lock-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: #6257e9;
+  flex: 0 0 auto;
+}
+.settings-lock-banner p {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.settings-lock-banner .text-action {
+  padding: 4px 0;
+  font-size: 12px;
+}
+.settings-panel.locked .settings-footer .generate-btn {
+  background: #8b90ad;
+  box-shadow: none;
+}
+.settings-panel.locked .settings-footer .generate-btn:hover:not(:disabled) {
+  background: #7a7f9c;
+}
 .settings-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 22px 20px 16px; }
 .settings-panel h2 {
   margin: 0 0 8px;
