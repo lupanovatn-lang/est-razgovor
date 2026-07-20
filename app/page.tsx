@@ -42,12 +42,22 @@ const reactions = [
 const STORAGE_KEY = "est-razgovor-conversations";
 
 const GENERATING_STAGES = [
-  { label: "Тема" },
-  { label: "Ситуация" },
-  { label: "Цель" },
-  { label: "Структура" },
-  { label: "Фразы" },
-  { label: "План" },
+  { label: "Тема", text: "Разбираю тему и параметры" },
+  { label: "Ситуация", text: "Считываю, что случилось" },
+  { label: "Цель", text: "Уточняю желаемый результат" },
+  { label: "Структура", text: "Подбираю структуру разговора" },
+  { label: "Шаги", text: "Формулирую шаги плана" },
+  { label: "Фразы", text: "Пишу спокойные формулировки" },
+  { label: "Реакции", text: "Готовлю возможные ответы ребёнка" },
+  { label: "Сборка", text: "Собираю план целиком" },
+];
+
+const GENERATING_WAIT_LINES = [
+  { label: "Тон", text: "Проверяю, чтобы тон оставался спокойным" },
+  { label: "Границы", text: "Сверяю шаги с вашей целью" },
+  { label: "Связки", text: "Связываю шаги между собой" },
+  { label: "Правки", text: "Убираю резкие формулировки" },
+  { label: "Почти", text: "Ещё чуть-чуть — почти готово" },
 ];
 
 function GoalIcon({ kind }: { kind: GoalKind }) {
@@ -107,6 +117,7 @@ export default function Home() {
   const [rehearseLoading, setRehearseLoading] = useState(false);
   const [rehearseError, setRehearseError] = useState("");
   const [statusIndex, setStatusIndex] = useState(0);
+  const [waitTick, setWaitTick] = useState(0);
 
   const childName = age ? `${age} лет` : "ребёнок";
   const suggested = useMemo(
@@ -125,14 +136,20 @@ export default function Home() {
   useEffect(() => {
     if (!generating) {
       setStatusIndex(0);
+      setWaitTick(0);
       return;
     }
     setStatusIndex(0);
-    // Don't reach the final stage until the plan is ready — avoids a long hang on 6/6.
-    const waitingMax = GENERATING_STAGES.length - 2;
+    setWaitTick(0);
+    // Advance through stages, then rotate wait copy until the API responds.
+    const lastStage = GENERATING_STAGES.length - 1;
     const id = window.setInterval(() => {
-      setStatusIndex((i) => Math.min(i + 1, waitingMax));
-    }, 900);
+      setStatusIndex((i) => {
+        if (i < lastStage) return i + 1;
+        setWaitTick((t) => t + 1);
+        return i;
+      });
+    }, 1100);
     return () => window.clearInterval(id);
   }, [generating]);
 
@@ -594,12 +611,21 @@ export default function Home() {
   }
 
   function GeneratingState() {
-    const waitingMax = GENERATING_STAGES.length - 2;
-    const stage = GENERATING_STAGES[statusIndex] ?? GENERATING_STAGES[0];
-    const waiting = statusIndex >= waitingMax;
-    const step = Math.min(statusIndex + 1, waitingMax + 1);
-    const total = GENERATING_STAGES.length;
-    const progress = waiting ? 78 : Math.round((step / total) * 100);
+    const lastStage = GENERATING_STAGES.length - 1;
+    const waiting = statusIndex >= lastStage && waitTick > 0;
+    const waitLine =
+      GENERATING_WAIT_LINES[waitTick % GENERATING_WAIT_LINES.length] ??
+      GENERATING_WAIT_LINES[0];
+    const stage = waiting
+      ? waitLine
+      : (GENERATING_STAGES[statusIndex] ?? GENERATING_STAGES[0]);
+    const step = waiting
+      ? GENERATING_STAGES.length + (waitTick % GENERATING_WAIT_LINES.length) + 1
+      : statusIndex + 1;
+    const total = GENERATING_STAGES.length + GENERATING_WAIT_LINES.length;
+    const progress = waiting
+      ? Math.min(92, 72 + (waitTick % GENERATING_WAIT_LINES.length) * 4)
+      : Math.round(((statusIndex + 1) / total) * 100);
 
     return (
       <section className="generating-progress" aria-live="polite" aria-busy="true">
@@ -608,24 +634,22 @@ export default function Home() {
           <i />
           <i />
         </div>
-        <p className="generating-status">
-          {waiting ? "Ещё немного — собираем план" : "Составляем план разговора"}
-        </p>
+        <p className="generating-status">{stage.text}</p>
         <div
           className={waiting ? "generating-bar waiting" : "generating-bar"}
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={progress}
-          aria-label="Составляем план разговора"
+          aria-label={stage.text}
         >
           <span style={waiting ? undefined : { width: `${progress}%` }} />
         </div>
         <div className="generating-meta">
           <span>
-            {step} / {total}
+            {Math.min(step, total)} / {total}
           </span>
-          <span className="generating-stage">{waiting ? "Почти готово" : stage.label}</span>
+          <span className="generating-stage">{stage.label}</span>
         </div>
       </section>
     );
