@@ -686,10 +686,30 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .coach-live-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 14px;
-  margin-top: 8px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
 }
-.coach-live .text-action { margin: 0; padding: 0; font-size: 12px; }
+.coach-live-primary {
+  border: 0;
+  border-radius: 9px;
+  background: #3f7a55;
+  color: #fff;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.coach-live-primary:hover { background: #356847; }
+.coach-live-secondary {
+  border: 0;
+  background: transparent;
+  color: #655aef;
+  padding: 8px 4px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
 .coach-steps { display: grid; gap: 6px; }
 .coach-step {
   border: 1px solid #e5e6f3;
@@ -707,25 +727,11 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   background: #f7f7fd;
 }
 .coach-step.done {
-  border-color: #d7e8dc;
-  background: #f7fbf8;
+  border-color: #e2ebe5;
+  background: #fafcfb;
 }
 .coach-step.done .coach-step-head b {
-  color: #6a7a70;
-  text-decoration: line-through;
-  text-decoration-color: #b7c9bd;
-}
-.coach-step.done .coach-step-num {
-  background: #e4f0e8;
-  color: #3f7a55;
-}
-.coach-step.done .coach-step-toggle {
-  color: #3f7a55;
-  font-weight: 700;
-}
-.coach-step.current .coach-step-num {
-  background: #e7e4ff;
-  color: #5045ce;
+  color: #8a948e;
 }
 .coach-step.current .coach-step-toggle {
   color: #655aef;
@@ -737,71 +743,55 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   align-items: stretch;
 }
 .coach-check {
-  width: 40px;
+  width: 48px;
   margin: 0;
   border: 0;
-  border-right: 1px solid #ececf5;
   background: transparent;
-  color: #fff;
+  color: #6257e9;
   display: grid;
   place-items: center;
   cursor: pointer;
   padding: 0;
+  font: inherit;
 }
-.coach-check::before {
-  content: "";
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 1.5px solid #c5c8db;
+.coach-check > span,
+.coach-check > svg {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  font-size: 12px;
+  font-weight: 700;
+}
+.coach-check > span {
+  border: 1.5px solid #c8c4f4;
   background: #fff;
-  box-sizing: border-box;
+  color: #6257e9;
 }
-.coach-check.done::before {
-  display: none;
+.coach-step.current .coach-check > span {
+  border-color: #655aef;
+  background: #e7e4ff;
 }
-.coach-check.done {
-  background: #eaf5ee;
-}
-.coach-check.done svg {
-  width: 18px;
-  height: 18px;
-  padding: 3px;
-  border-radius: 5px;
+.coach-check.done > svg {
   background: #3f7a55;
-  box-sizing: border-box;
+  color: #fff;
+  padding: 6px;
 }
 .coach-step-head {
   width: 100%;
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
   border: 0;
   background: transparent;
-  padding: 10px 12px;
+  padding: 12px 12px 12px 0;
   text-align: left;
   cursor: pointer;
   color: inherit;
   font: inherit;
-}
-.coach-mark-btn {
-  width: 100%;
-  margin-top: 10px;
-  padding: 9px 12px;
-  border: 1px solid #d5d8ea;
-  border-radius: 9px;
-  background: #fff;
-  color: #5045ce;
-  font-size: 12px;
-  font-weight: 650;
-  cursor: pointer;
-}
-.coach-mark-btn:hover { background: #f5f5fc; }
-.coach-mark-btn.done {
-  border-color: #c9dfd1;
-  background: #f2f8f4;
-  color: #3f7a55;
 }
 .coach-step-num {
   width: 28px;
@@ -830,9 +820,8 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .coach-step-body {
   display: grid;
   gap: 10px;
-  padding: 0 12px 12px 52px;
+  padding: 12px 12px 12px 48px;
   border-top: 1px solid #ececf5;
-  padding-top: 12px;
 }
 .coach-step-body > p {
   margin: 0;
@@ -840,6 +829,19 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   font-size: 12px;
   line-height: 1.45;
 }
+.coach-mark-btn {
+  width: 100%;
+  margin-top: 2px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: #3f7a55;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.coach-mark-btn:hover { background: #356847; }
 .coach-questions > span {
   display: block;
   margin-bottom: 6px;

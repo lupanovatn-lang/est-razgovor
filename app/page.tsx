@@ -392,9 +392,23 @@ export default function Home() {
   };
 
   const toggleCoachStepDone = (index: number) => {
-    setDoneCoachSteps((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
+    setDoneCoachSteps((prev) => {
+      if (prev.includes(index)) return prev.filter((i) => i !== index);
+      return [...prev, index];
+    });
+  };
+
+  const markCoachStepDone = (index: number) => {
+    const afterDone = new Set([...doneCoachSteps, index]);
+    setDoneCoachSteps([...afterDone]);
+    const total = plan?.steps.length ?? 0;
+    const nextOpen = Array.from({ length: total }, (_, i) => i).find(
+      (i) => i > index && !afterDone.has(i),
     );
+    setOpenCoachStep(nextOpen ?? -1);
+    if (coachActiveStep === index + 1) {
+      setCoachActiveStep(nextOpen != null ? nextOpen + 1 : null);
+    }
   };
 
   const sendReply = async () => {
@@ -429,13 +443,20 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось получить ответ");
       setMessages([...nextHistory, { role: "child", text: data.childMessage }]);
-      // Live tip points at one plan step; steps stay collapsed until opened.
+      // Live tip points at one plan step; earlier steps soft-complete for checklist flow.
       setCoachTip(data.coachTip || "");
-      setCoachActiveStep(
+      const nextActive =
         typeof data.activeStep === "number" && data.activeStep >= 1
           ? data.activeStep
-          : null,
-      );
+          : null;
+      setCoachActiveStep(nextActive);
+      if (nextActive != null) {
+        setDoneCoachSteps((prev) => {
+          const auto = new Set(prev);
+          for (let i = 0; i < nextActive - 1; i++) auto.add(i);
+          return [...auto];
+        });
+      }
       setTryPhrase(data.tryPhrase || "");
       setFeedback(data.feedback || "");
     } catch (e) {
@@ -949,20 +970,23 @@ export default function Home() {
               <span>✦</span>
               <div>
                 <b>Задание по плану</b>
-                <small>Отмечайте шаги по мере разговора</small>
+                <small>
+                  {(() => {
+                    const total = plan?.steps.length ?? 0;
+                    const doneCount = doneCoachSteps.filter(
+                      (i) => i >= 0 && i < total,
+                    ).length;
+                    return `${doneCount} из ${total} шагов`;
+                  })()}
+                </small>
               </div>
             </div>
-
-            <p className="coach-brief">
-              Это чеклист разговора: отметьте шаг, когда прошли его. Подсказки и
-              фразы — по кнопке «Помощь».
-            </p>
 
             {coachTip && messages.length > 0 && (
               <div className="coach-live">
                 <span>
                   {coachActiveStep
-                    ? `Подсказка к шагу ${coachActiveStep}`
+                    ? `Сейчас · шаг ${coachActiveStep}`
                     : "Подсказка по ходу"}
                 </span>
                 {coachActiveStep && plan?.steps[coachActiveStep - 1] && (
@@ -975,30 +999,21 @@ export default function Home() {
                   {tryPhrase && (
                     <button
                       type="button"
-                      className="text-action"
+                      className="coach-live-secondary"
                       disabled={rehearseLoading}
                       onClick={() => setReply(tryPhrase)}
                     >
                       Вставить фразу
                     </button>
                   )}
-                  {coachActiveStep != null && (
-                    <button
-                      type="button"
-                      className="text-action"
-                      onClick={() => setOpenCoachStep(coachActiveStep - 1)}
-                    >
-                      Открыть шаг
-                    </button>
-                  )}
                   {coachActiveStep != null &&
                     !doneCoachSteps.includes(coachActiveStep - 1) && (
                       <button
                         type="button"
-                        className="text-action"
-                        onClick={() => toggleCoachStepDone(coachActiveStep - 1)}
+                        className="coach-live-primary"
+                        onClick={() => markCoachStepDone(coachActiveStep - 1)}
                       >
-                        Шаг сделан
+                        ✓ Шаг сделан
                       </button>
                     )}
                 </div>
@@ -1006,18 +1021,6 @@ export default function Home() {
               </div>
             )}
 
-            {(() => {
-              const total = plan?.steps.length ?? 0;
-              const doneCount = doneCoachSteps.filter((i) => i >= 0 && i < total).length;
-              return (
-                <div className="coach-checklist-head">
-                  <span>Чеклист шагов</span>
-                  <span className="coach-checklist-progress">
-                    {doneCount} из {total} сделано
-                  </span>
-                </div>
-              );
-            })()}
             <div className="coach-steps">
               {(plan?.steps ?? []).map((step, i) => {
                 const open = openCoachStep === i;
@@ -1051,7 +1054,9 @@ export default function Home() {
                             ? `Шаг ${i + 1} сделан — снять отметку`
                             : `Отметить шаг ${i + 1} сделанным`
                         }
-                        onClick={() => toggleCoachStepDone(i)}
+                        onClick={() =>
+                          done ? toggleCoachStepDone(i) : markCoachStepDone(i)
+                        }
                       >
                         {done ? (
                           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -1063,7 +1068,9 @@ export default function Home() {
                               strokeLinejoin="round"
                             />
                           </svg>
-                        ) : null}
+                        ) : (
+                          <span aria-hidden="true">{i + 1}</span>
+                        )}
                       </button>
                       <button
                         type="button"
@@ -1071,18 +1078,15 @@ export default function Home() {
                         aria-expanded={open}
                         onClick={() => setOpenCoachStep(open ? -1 : i)}
                       >
-                        <span className="coach-step-num">{i + 1}</span>
                         <b>{step.title}</b>
                         <span className="coach-step-toggle">
                           {open
                             ? "Свернуть"
-                            : done
-                              ? "Сделано"
-                              : current
-                                ? "Сейчас"
-                                : hasHints
-                                  ? "Помощь"
-                                  : ""}
+                            : current
+                              ? "Сейчас"
+                              : hasHints
+                                ? "Фразы"
+                                : ""}
                         </span>
                       </button>
                     </div>
@@ -1090,7 +1094,7 @@ export default function Home() {
                       <div className="coach-step-body">
                         {(step.action || step.why) && (
                           <div className="coach-block">
-                            <span>Что сделать в этом шаге</span>
+                            <span>Что сделать</span>
                             <p>{step.action || step.why}</p>
                           </div>
                         )}
@@ -1134,15 +1138,17 @@ export default function Home() {
                           </div>
                         )}
                         {!hasHints && (
-                          <p>Сформулируйте этот шаг своими словами — по цели разговора.</p>
+                          <p>Сформулируйте этот шаг своими словами.</p>
                         )}
-                        <button
-                          type="button"
-                          className={done ? "coach-mark-btn done" : "coach-mark-btn"}
-                          onClick={() => toggleCoachStepDone(i)}
-                        >
-                          {done ? "✓ Сделано — снять отметку" : "Отметить шаг сделанным"}
-                        </button>
+                        {!done && (
+                          <button
+                            type="button"
+                            className="coach-mark-btn"
+                            onClick={() => markCoachStepDone(i)}
+                          >
+                            ✓ Шаг сделан
+                          </button>
+                        )}
                       </div>
                     )}
                   </article>
