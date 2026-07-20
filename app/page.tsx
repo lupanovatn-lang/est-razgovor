@@ -122,7 +122,6 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("");
   const [openCoachStep, setOpenCoachStep] = useState(-1);
-  const [doneCoachSteps, setDoneCoachSteps] = useState<number[]>([]);
   const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -189,7 +188,6 @@ export default function Home() {
     setReply("");
     setCoachTip("");
     setCoachActiveStep(null);
-    setDoneCoachSteps([]);
     setOpenCoachStep(-1);
     setTryPhrase("");
     setRehearseError("");
@@ -379,30 +377,9 @@ export default function Home() {
     setRehearseError("");
     setRehearseLoading(false);
     setCoachTip("");
-    setCoachActiveStep(null);
-    setDoneCoachSteps([]);
+    setCoachActiveStep(1);
     setTryPhrase("");
     setOpenCoachStep(-1);
-  };
-
-  const toggleCoachStepDone = (index: number) => {
-    setDoneCoachSteps((prev) => {
-      if (prev.includes(index)) return prev.filter((i) => i !== index);
-      return [...prev, index];
-    });
-  };
-
-  const markCoachStepDone = (index: number) => {
-    const afterDone = new Set([...doneCoachSteps, index]);
-    setDoneCoachSteps([...afterDone]);
-    const total = plan?.steps.length ?? 0;
-    const nextOpen = Array.from({ length: total }, (_, i) => i).find(
-      (i) => i > index && !afterDone.has(i),
-    );
-    setOpenCoachStep(nextOpen ?? -1);
-    if (coachActiveStep === index + 1) {
-      setCoachActiveStep(nextOpen != null ? nextOpen + 1 : null);
-    }
   };
 
   const sendReply = async () => {
@@ -432,25 +409,22 @@ export default function Home() {
           openingPhrase,
           messages: nextHistory,
           parentReply: parentText,
+          currentStep: coachActiveStep ?? 1,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Не удалось получить ответ");
       setMessages([...nextHistory, { role: "child", text: data.childMessage }]);
-      // Live tip points at one plan step; earlier steps soft-complete for checklist flow.
       setCoachTip(data.coachTip || "");
-      const nextActive =
-        typeof data.activeStep === "number" && data.activeStep >= 1
-          ? data.activeStep
-          : null;
-      setCoachActiveStep(nextActive);
-      if (nextActive != null) {
-        setDoneCoachSteps((prev) => {
-          const auto = new Set(prev);
-          for (let i = 0; i < nextActive - 1; i++) auto.add(i);
-          return [...auto];
-        });
-      }
+      const stepCount = plan.steps.length;
+      const parsed = Number(data.activeStep);
+      const nextActive = Number.isFinite(parsed)
+        ? Math.min(stepCount, Math.max(1, Math.round(parsed)))
+        : (coachActiveStep ?? 1);
+      // Checklist only advances forward with the conversation.
+      setCoachActiveStep((prev) =>
+        Math.max(prev ?? 1, nextActive),
+      );
       setTryPhrase(data.tryPhrase || "");
     } catch (e) {
       setRehearseError(e instanceof Error ? e.message : "Ошибка репетиции");
@@ -962,12 +936,12 @@ export default function Home() {
             {(() => {
               const steps = plan?.steps ?? [];
               const total = steps.length;
-              const doneCount = doneCoachSteps.filter((i) => i >= 0 && i < total).length;
-              const focusIndex =
-                coachActiveStep != null && coachActiveStep >= 1
-                  ? coachActiveStep - 1
-                  : steps.findIndex((_, i) => !doneCoachSteps.includes(i));
-              const focusStep = focusIndex >= 0 ? steps[focusIndex] : undefined;
+              const focusIndex = Math.min(
+                total - 1,
+                Math.max(0, (coachActiveStep ?? 1) - 1),
+              );
+              const doneCount = Math.min(total, Math.max(0, (coachActiveStep ?? 1) - 1));
+              const focusStep = total > 0 ? steps[focusIndex] : undefined;
               const tipText =
                 coachTip ||
                 (messages.length === 0 && focusStep
@@ -984,7 +958,7 @@ export default function Home() {
                     <div>
                       <b>Тренажёр</b>
                       <small>
-                        {doneCount} / {total}
+                        Шаг {Math.min(total, focusIndex + 1)} / {total}
                       </small>
                     </div>
                   </div>
@@ -1011,10 +985,10 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="coach-steps">
+                  <div className="coach-steps" aria-label="Прогресс по шагам плана">
                     {steps.map((step, i) => {
                       const open = openCoachStep === i;
-                      const done = doneCoachSteps.includes(i);
+                      const done = i < doneCount;
                       const current = !done && i === focusIndex;
                       const phrase = step.phrase?.trim() || "";
                       const avoid = step.avoid?.trim() || "";
@@ -1033,21 +1007,12 @@ export default function Home() {
                             .join(" ")}
                         >
                           <div className="coach-step-row">
-                            <button
-                              type="button"
+                            <span
                               className={done ? "coach-check done" : "coach-check"}
-                              aria-pressed={done}
-                              aria-label={
-                                done
-                                  ? `Шаг ${i + 1} сделан — снять`
-                                  : `Отметить шаг ${i + 1}`
-                              }
-                              onClick={() =>
-                                done ? toggleCoachStepDone(i) : markCoachStepDone(i)
-                              }
+                              aria-hidden="true"
                             >
                               {done ? (
-                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                                   <path
                                     d="M2.5 6.2 4.8 8.5 9.5 3.5"
                                     stroke="currentColor"
@@ -1057,9 +1022,9 @@ export default function Home() {
                                   />
                                 </svg>
                               ) : (
-                                <span aria-hidden="true">{i + 1}</span>
+                                <span>{i + 1}</span>
                               )}
-                            </button>
+                            </span>
                             <button
                               type="button"
                               className="coach-step-head"

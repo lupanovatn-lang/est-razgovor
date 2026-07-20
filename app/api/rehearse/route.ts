@@ -45,6 +45,10 @@ export async function POST(request: Request) {
       openingPhrase: body.openingPhrase || "",
       messages: Array.isArray(body.messages) ? body.messages : [],
       parentReply: body.parentReply?.trim() || "",
+      currentStep:
+        typeof body.currentStep === "number" && body.currentStep >= 1
+          ? Math.round(body.currentStep)
+          : 1,
     };
 
     const raw = await openaiJson<RehearseResponse>({
@@ -54,11 +58,12 @@ export async function POST(request: Request) {
     });
 
     const stepCount = planSteps.length;
+    const current = input.currentStep ?? 1;
     const parsedStep = Number(raw.activeStep);
     const activeStep =
       stepCount > 0 && Number.isFinite(parsedStep)
-        ? Math.min(stepCount, Math.max(1, Math.round(parsedStep)))
-        : null;
+        ? Math.min(stepCount, Math.max(current, Math.round(parsedStep)))
+        : current;
 
     return Response.json({
       childMessage: String(raw.childMessage || "").trim(),

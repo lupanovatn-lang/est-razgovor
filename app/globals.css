@@ -711,9 +711,9 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   color: #6257e9;
   display: grid;
   place-items: center;
-  cursor: pointer;
   padding: 0;
   font: inherit;
+  pointer-events: none;
 }
 .coach-check > span,
 .coach-check > svg {
