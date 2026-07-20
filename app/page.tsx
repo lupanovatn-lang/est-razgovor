@@ -550,43 +550,26 @@ export default function Home() {
     return (
       <section className="plan-wrap">
         <header className="plan-header">
-          <div>
-            <h1>{plan.title}</h1>
-            <p className="plan-goal">{goalText || goalLabel(goalKind)}</p>
-            <p className="plan-meta">
-              {topic} · {childName} · {plan.steps.length} {stepWord}
-              {planSource === "fallback" ? " · шаблон" : ""}
-            </p>
-            {planWarning && <p className="plan-warning">{planWarning}</p>}
-          </div>
-          <div className="plan-actions">
-            <button
-              className={savedFlash ? "icon-btn saved" : "icon-btn"}
-              onClick={saveConversation}
-            >
-              <img src="/bookmark-ref.png" alt="" />
-              {savedFlash ? "Сохранено" : "Сохранить"}
-            </button>
-            <button className="icon-btn" onClick={copyPlan}>
-              <img src="/copy-ref.png" alt="" />
-              {copied ? "Скопировано" : "Копировать"}
-            </button>
-          </div>
+          <h1>{plan.title}</h1>
+          <p className="plan-goal">{goalText || goalLabel(goalKind)}</p>
+          <p className="plan-meta">
+            {topic} · {childName} · {plan.steps.length} {stepWord}
+            {planSource === "fallback" ? " · шаблон" : ""}
+          </p>
+          {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 
         {(plan.nonNegotiable || plan.discussable) && (
-          <div className="boundary-split">
+          <div className="boundary-inline">
             {plan.nonNegotiable && (
-              <div>
-                <span>Что не обсуждается</span>
-                <p>{plan.nonNegotiable}</p>
-              </div>
+              <p>
+                <b>Не обсуждается:</b> {plan.nonNegotiable}
+              </p>
             )}
             {plan.discussable && (
-              <div>
-                <span>Что можно решить вместе</span>
-                <p>{plan.discussable}</p>
-              </div>
+              <p>
+                <b>Можно вместе:</b> {plan.discussable}
+              </p>
             )}
           </div>
         )}
@@ -599,9 +582,14 @@ export default function Home() {
         </div>
 
         <div className="plan-bottom-actions">
-          <button type="button" className="edit-plan-button" onClick={focusSettings}>
-            <img src="/pencil-ref.png" alt="" />
+          <button type="button" className="text-action" onClick={focusSettings}>
             Изменить данные
+          </button>
+          <button type="button" className="text-action" onClick={saveConversation}>
+            {savedFlash ? "Сохранено" : "Сохранить"}
+          </button>
+          <button type="button" className="text-action" onClick={copyPlan}>
+            {copied ? "Скопировано" : "Копировать"}
           </button>
           <button
             type="button"

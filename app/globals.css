@@ -76,12 +76,15 @@ button { color: inherit; }
 }
 
 .prep-banner { display: none; }
-.plan-goal { margin: 0 0 6px !important; max-width: 46ch; color: #3f435a !important; font-size: 15px !important; line-height: 1.4 !important; font-weight: 500; }
-.plan-meta { margin: 0 !important; color: #80849f !important; font-size: 12px !important; }
-.plan-bottom-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-.plan-bottom-actions .edit-plan-button,
-.plan-bottom-actions .rehearse-button { width: auto; min-width: 180px; margin-top: 0; flex: 1; }
-.rehearse-button.inline { width: auto; margin-top: 0; padding: 9px 14px; }
+.plan-goal { margin: 8px 0 4px !important; max-width: 52ch; color: #4a4e63 !important; font-size: 15px !important; line-height: 1.4 !important; font-weight: 500; }
+.plan-meta { margin: 0 !important; color: #8a8eaa !important; font-size: 12px !important; }
+.boundary-inline { display: grid; gap: 6px; margin: 0 0 16px; max-width: 56ch; }
+.boundary-inline p { margin: 0; color: #5a5e76; font-size: 12.5px; line-height: 1.45; }
+.boundary-inline b { font-weight: 650; color: #3f435a; }
+.plan-bottom-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+.plan-bottom-actions .rehearse-button { width: auto; margin-top: 0; margin-left: auto; min-width: 160px; }
+.text-action { border: 0; background: transparent; padding: 8px 4px; color: #6257e9; font-size: 13px; font-weight: 600; cursor: pointer; }
+.text-action:hover { color: #4e43da; }
 
 .top-strip { grid-column: 1 / -1; background: #c9c3ff; display: flex; align-items: center; justify-content: center; gap: 22px; padding: 0 24px; font-size: 13px; color: #28294a; }
 .top-strip > span { display: none; }
