@@ -45,7 +45,7 @@ function GoalIcon({ kind }: { kind: GoalKind }) {
   // Always show a target for the conversation goal.
   void kind;
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <circle cx="10" cy="10" r="7.2" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="10" cy="10" r="4.2" stroke="currentColor" strokeWidth="1.5" />
       <circle cx="10" cy="10" r="1.5" fill="currentColor" />
@@ -529,7 +529,10 @@ export default function Home() {
             <span className="goal-badge-icon">
               <GoalIcon kind={goalKind} />
             </span>
-            <span>{goalText || goalLabel(goalKind)}</span>
+            <span>
+              <span className="goal-badge-label">Цель разговора</span>
+              {goalText || goalLabel(goalKind)}
+            </span>
           </div>
         </header>
 
@@ -571,7 +574,10 @@ export default function Home() {
             <span className="goal-badge-icon">
               <GoalIcon kind={goalKind} />
             </span>
-            <span>{goalText || goalLabel(goalKind)}</span>
+            <span>
+              <span className="goal-badge-label">Цель разговора</span>
+              {goalText || goalLabel(goalKind)}
+            </span>
           </div>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
