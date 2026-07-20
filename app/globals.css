@@ -81,10 +81,6 @@ button { color: inherit; }
 .goal-badge-icon { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #6257e9; flex: 0 0 auto; }
 .goal-badge > span:last-child { min-width: 0; }
 .plan-goal { display: none; }
-.plan-meta { margin: 8px 0 0 !important; color: #8a8eaa !important; font-size: 12px !important; }
-.boundary-inline { display: grid; gap: 6px; margin: 14px 0 0; max-width: 56ch; }
-.boundary-inline p { margin: 0; color: #6d718a; font-size: 12px; line-height: 1.45; }
-.boundary-inline b { font-weight: 650; color: #4a4e63; }
 .plan-bottom-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
 .plan-bottom-actions .rehearse-button { width: auto; margin-top: 0; margin-left: auto; min-width: 160px; }
 .text-action { border: 0; background: transparent; padding: 8px 4px; color: #6257e9; font-size: 13px; font-weight: 600; cursor: pointer; }
