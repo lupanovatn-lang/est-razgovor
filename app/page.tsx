@@ -651,8 +651,6 @@ export default function Home() {
 
   function PlanView() {
     if (!plan) return null;
-    const stepWord =
-      plan.steps.length === 1 ? "шаг" : plan.steps.length < 5 ? "шага" : "шагов";
 
     const focusSettings = () => {
       const el = document.getElementById("situation");
@@ -697,7 +695,7 @@ export default function Home() {
 
         <div className="plan-bottom-actions">
           <button type="button" className="text-action" onClick={focusSettings}>
-            Изменить данные
+            Изменить запрос
           </button>
           <button type="button" className="text-action" onClick={saveConversation}>
             {savedFlash ? "Сохранено" : "Сохранить"}
