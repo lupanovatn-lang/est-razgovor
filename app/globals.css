@@ -87,15 +87,23 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .boundary-split > div { padding: 16px 18px; border-radius: 14px; border: 1px solid #e0e2ee; background: rgba(255,255,255,.88); }
 .boundary-split span { display: block; margin-bottom: 8px; color: #6b62e8; font-size: 11px; font-weight: 650; }
 .boundary-split p { margin: 0; color: #3f435a; font-size: 12px; line-height: 1.55; }
-.step-modules { display: flex; flex-direction: column; gap: 22px; max-width: 520px; }
-.step-module { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
-.step-module h3 { margin: 0; color: #3f435a; font-size: 13px; font-weight: 650; letter-spacing: -.01em; text-transform: none; }
-.step-prose { margin: 0; max-width: 48ch; color: #5a5e76; font-size: 13px; line-height: 1.55; }
-.quote-stack { display: flex; flex-direction: column; gap: 8px; max-width: 440px; }
-.quote-card { width: fit-content; max-width: 100%; padding: 12px 14px; border-radius: 12px; background: #eef0fb; color: #34374f; font-size: 13px; line-height: 1.5; }
-.dialog-pairs { display: flex; flex-direction: column; gap: 22px; }
-.dialog-pair { display: flex; flex-direction: column; gap: 22px; }
-.warn-chip { width: fit-content; max-width: 440px; padding: 10px 12px; border-radius: 10px; background: #fff1ea; color: #9a6558; font-size: 12px; line-height: 1.45; }
+.step-instruction { margin: 0; max-width: 52ch; color: #5a5e76; font-size: 13px; line-height: 1.5; }
+.step-outcome { margin: 0; max-width: 52ch; color: #6d718a; font-size: 12px; line-height: 1.45; }
+.scenario-card { max-width: 480px; padding: 14px 16px 12px; border: 1px solid #e4e6f2; border-radius: 14px; background: #f7f8fc; }
+.scenario-card-title { margin-bottom: 10px; color: #3f435a; font-size: 13px; font-weight: 650; }
+.scenario-flow { display: flex; flex-direction: column; gap: 10px; }
+.scenario-exchange { display: flex; flex-direction: column; gap: 8px; }
+.scenario-turn { max-width: 100%; }
+.scenario-turn span { display: block; margin-bottom: 4px; color: #8a8eaa; font-size: 10px; font-weight: 650; letter-spacing: .02em; }
+.scenario-turn p { margin: 0; width: fit-content; max-width: 100%; padding: 9px 12px; border-radius: 11px; font-size: 12.5px; line-height: 1.45; }
+.scenario-turn.parent p { background: #e9ebf8; color: #34374f; }
+.scenario-turn.child p { background: #fff; border: 1px solid #e3e5f1; color: #3f435a; }
+.scenario-more { margin-top: 10px; padding: 0; border: 0; background: none; color: #6257e9; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; }
+.scenario-more:hover { color: #4e43da; }
+.avoid-line { display: flex; align-items: flex-start; gap: 8px; max-width: 480px; padding: 8px 10px 8px 9px; border-radius: 10px; border-left: 2px solid #c5c8e0; background: #f3f4f9; color: #4a4e63; }
+.avoid-icon { flex: 0 0 auto; margin-top: 1px; color: #7d8199; display: grid; place-items: center; }
+.avoid-line p { margin: 0; font-size: 12px; line-height: 1.4; }
+.avoid-line b { font-weight: 650; color: #3f435a; }
 .reaction-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .reaction { border: 1px solid #e0e2ef; background: #fafaff; border-radius: 10px; padding: 11px 12px; text-align: left; font-size: 12px; cursor: pointer; }
 .reaction:hover { background: #f2f2fb; }
@@ -168,8 +176,8 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-more { display: inline-flex; align-items: center; gap: 7px; color: #6257e9; font-size: 11px; font-weight: 600; }
 .plan-more .caret { width: 16px; height: 16px; object-fit: contain; transition: transform .18s ease; }
 .plan-more .caret.open { transform: rotate(180deg); }
-.plan-step-body { margin: 0 30px 26px 92px; padding: 4px 0 8px; border-radius: 0; background: transparent; color: #4f536d; }
-.plan-step-body p { margin: 0; font-size: 13px; line-height: 1.55; }
+.plan-step-body { margin: 0 30px 18px 92px; padding: 0; display: flex; flex-direction: column; gap: 16px; background: transparent; color: #4f536d; }
+.plan-step-body p { margin: 0; font-size: 13px; line-height: 1.5; }
 .plan-cheatsheet { position: sticky; top: 22px; padding: 24px 22px 20px; border: 1px solid #e0e2ee; border-radius: 17px; background: rgba(255,255,255,.9); }
 .plan-cheatsheet h2 { margin: 0 0 6px; font-size: 17px; letter-spacing: -.015em; }
 .prep-meta { display: grid; gap: 23px; margin-top: 24px; }

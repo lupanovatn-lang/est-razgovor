@@ -73,6 +73,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [openPlanStep, setOpenPlanStep] = useState("01");
+  const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [coachTip, setCoachTip] = useState("");
@@ -152,6 +153,7 @@ export default function Home() {
       setPlanSource(data.source === "openai" || data.source === "openrouter" ? "openai" : "fallback");
       setPlanWarning(data.warning || "");
       setOpenPlanStep("01");
+      setMoreReactions({});
       setStep("plan");
     } catch (e) {
       setPlanError(e instanceof Error ? e.message : "Ошибка генерации");
@@ -576,6 +578,15 @@ export default function Home() {
     step: PlanStep;
   }) {
     const open = openPlanStep === n;
+    const reactions = planStep.reactions ?? [];
+    const primaryReaction = reactions[0];
+    const extraReactions = reactions.slice(1);
+    const showExtras = !!moreReactions[n];
+    const hasScenario =
+      !!planStep.phrase ||
+      (planStep.questions && planStep.questions.length > 0) ||
+      reactions.length > 0;
+
     return (
       <article className={open ? "plan-step open" : "plan-step"}>
         <button
@@ -595,65 +606,90 @@ export default function Home() {
         </button>
         {open && (
           <div className="plan-step-body">
-            <div className="step-modules">
-              {planStep.action && (
-                <div className="step-module">
-                  <h3>Как действовать</h3>
-                  <p className="step-prose">{planStep.action}</p>
-                </div>
-              )}
+            {planStep.action && <p className="step-instruction">{planStep.action}</p>}
 
-              {planStep.phrase && (
-                <div className="step-module">
-                  <h3>Можно сказать</h3>
-                  <div className="quote-card">«{planStep.phrase}»</div>
-                </div>
-              )}
-
-              {planStep.questions && planStep.questions.length > 0 && (
-                <div className="step-module">
-                  <h3>Можно спросить</h3>
-                  <div className="quote-stack">
-                    {planStep.questions.map((q) => (
-                      <div className="quote-card" key={q}>
-                        {q}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {planStep.reactions && planStep.reactions.length > 0 && (
-                <div className="dialog-pairs">
-                  {planStep.reactions.map((r) => (
-                    <div className="dialog-pair" key={`${r.child}-${r.parent}`}>
-                      <div className="step-module">
-                        <h3>Возможная реакция ребёнка</h3>
-                        <div className="quote-card">{r.child}</div>
-                      </div>
-                      <div className="step-module">
-                        <h3>Можно ответить</h3>
-                        <div className="quote-card">{r.parent}</div>
-                      </div>
+            {hasScenario && (
+              <div className="scenario-card">
+                <div className="scenario-card-title">Как может пройти разговор</div>
+                <div className="scenario-flow">
+                  {planStep.phrase && (
+                    <div className="scenario-turn parent">
+                      <span>Вы</span>
+                      <p>«{planStep.phrase}»</p>
+                    </div>
+                  )}
+                  {planStep.questions?.map((q) => (
+                    <div className="scenario-turn parent" key={q}>
+                      <span>Вопрос</span>
+                      <p>{q}</p>
                     </div>
                   ))}
+                  {primaryReaction && (
+                    <div className="scenario-exchange">
+                      <div className="scenario-turn child">
+                        <span>Ребёнок</span>
+                        <p>{primaryReaction.child}</p>
+                      </div>
+                      <div className="scenario-turn parent">
+                        <span>Можно ответить</span>
+                        <p>{primaryReaction.parent}</p>
+                      </div>
+                    </div>
+                  )}
+                  {showExtras &&
+                    extraReactions.map((r) => (
+                      <div className="scenario-exchange" key={`${r.child}-${r.parent}`}>
+                        <div className="scenario-turn child">
+                          <span>Ребёнок</span>
+                          <p>{r.child}</p>
+                        </div>
+                        <div className="scenario-turn parent">
+                          <span>Можно ответить</span>
+                          <p>{r.parent}</p>
+                        </div>
+                      </div>
+                    ))}
                 </div>
-              )}
+                {extraReactions.length > 0 && (
+                  <button
+                    type="button"
+                    className="scenario-more"
+                    onClick={() =>
+                      setMoreReactions((prev) => ({ ...prev, [n]: !prev[n] }))
+                    }
+                  >
+                    {showExtras
+                      ? "Скрыть другие реакции"
+                      : `Другие возможные реакции · ${extraReactions.length}`}
+                  </button>
+                )}
+              </div>
+            )}
 
-              {planStep.avoid && (
-                <div className="step-module">
-                  <h3>Лучше не говорить</h3>
-                  <div className="warn-chip">{planStep.avoid}</div>
-                </div>
-              )}
+            {planStep.avoid && (
+              <div className="avoid-line">
+                <span className="avoid-icon" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M3.2 4.2h6.2c.7 0 1.2.6 1.1 1.3l-.5 3.2c-.1.7-.7 1.2-1.4 1.2H4.8c-.7 0-1.3-.5-1.4-1.2l-.5-3.2c-.1-.7.4-1.3 1.1-1.3Z"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                    />
+                    <path
+                      d="M5 4.1V3.4c0-.8.6-1.4 1.4-1.4h.8c.8 0 1.4.6 1.4 1.4v.7"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                    />
+                    <path d="M2.2 11.8 11.8 2.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <p>
+                  <b>Не стоит:</b> {planStep.avoid}
+                </p>
+              </div>
+            )}
 
-              {planStep.outcome && (
-                <div className="step-module">
-                  <h3>К чему прийти</h3>
-                  <p className="step-prose">{planStep.outcome}</p>
-                </div>
-              )}
-            </div>
+            {planStep.outcome && <p className="step-outcome">{planStep.outcome}</p>}
           </div>
         )}
       </article>
