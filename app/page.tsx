@@ -47,6 +47,93 @@ const GENERATING_STATUSES = [
   "Собираем план",
 ];
 
+function GoalIcon({ kind }: { kind: GoalKind }) {
+  const common = {
+    width: 20,
+    height: 20,
+    viewBox: "0 0 20 20",
+    fill: "none",
+    "aria-hidden": true as const,
+  };
+  switch (kind) {
+    case "understand":
+      return (
+        <svg {...common}>
+          <circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M13.2 13.2 16.5 16.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      );
+    case "agree":
+      return (
+        <svg {...common}>
+          <path
+            d="M4 10.5 7.5 14 16 5.5"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "boundary":
+      return (
+        <svg {...common}>
+          <path
+            d="M10 2.8 15.5 5v4.2c0 3.4-2.2 5.8-5.5 7-3.3-1.2-5.5-3.6-5.5-7V5L10 2.8Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "announce":
+      return (
+        <svg {...common}>
+          <path
+            d="M4.5 8.2v3.6c0 .6.5 1.1 1.1 1.1h1.4L11 16V4L7 7.1H5.6c-.6 0-1.1.5-1.1 1.1Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path d="M13.2 7.2c.8.7.8 4.9 0 5.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      );
+    case "support":
+      return (
+        <svg {...common}>
+          <path
+            d="M10 16s-5.2-3.2-5.2-7A3.1 3.1 0 0 1 10 6.2 3.1 3.1 0 0 1 15.2 9c0 3.8-5.2 7-5.2 7Z"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case "trust":
+      return (
+        <svg {...common}>
+          <path
+            d="M7.2 10a2.6 2.6 0 1 1 0-5.2h2.2M12.8 10a2.6 2.6 0 1 0 0 5.2h-2.2M8.2 10h3.6"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+    default:
+      return (
+        <svg {...common}>
+          <path
+            d="M10 3.2v2.2M10 14.6v2.2M3.2 10h2.2M14.6 10h2.2M5.4 5.4l1.5 1.5M13.1 13.1l1.5 1.5M14.6 5.4l-1.5 1.5M6.9 13.1l-1.5 1.5"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+  }
+}
+
 function loadSaved(): SavedConversation[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -576,14 +663,26 @@ export default function Home() {
     return (
       <section className="plan-wrap">
         <header className="plan-header">
+          <div className="goal-badge">
+            <span className="goal-badge-icon">
+              <GoalIcon kind={goalKind} />
+            </span>
+            <span>{goalText || goalLabel(goalKind)}</span>
+          </div>
           <h1>{plan.title}</h1>
-          <p className="plan-goal">{goalText || goalLabel(goalKind)}</p>
           <p className="plan-meta">
-            {topic} · {childName} · {plan.steps.length} {stepWord}
-            {planSource === "fallback" ? " · шаблон" : ""}
+            {plan.steps.length} {stepWord}
+            {age ? ` · ${childName}` : ""}
           </p>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
+
+        <div className="plan-flow">
+          {plan.steps.map((s, i) => {
+            const n = String(i + 1).padStart(2, "0");
+            return <PlanItem key={n} n={n} title={s.title} preview={s.why} step={s} />;
+          })}
+        </div>
 
         {(plan.nonNegotiable || plan.discussable) && (
           <div className="boundary-inline">
@@ -599,13 +698,6 @@ export default function Home() {
             )}
           </div>
         )}
-
-        <div className="plan-flow">
-          {plan.steps.map((s, i) => {
-            const n = String(i + 1).padStart(2, "0");
-            return <PlanItem key={n} n={n} title={s.title} preview={s.why} step={s} />;
-          })}
-        </div>
 
         <div className="plan-bottom-actions">
           <button type="button" className="text-action" onClick={focusSettings}>
