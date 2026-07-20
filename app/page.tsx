@@ -520,17 +520,17 @@ export default function Home() {
     return (
       <section className="plan-wrap generating-plan" aria-live="polite" aria-busy="true">
         <header className="plan-header">
+          {titleReady ? (
+            <h1 className="generating-title">Составляем план…</h1>
+          ) : (
+            <div className="skeleton-title shimmer" aria-hidden="true" />
+          )}
           <div className="goal-badge">
             <span className="goal-badge-icon">
               <GoalIcon kind={goalKind} />
             </span>
             <span>{goalText || goalLabel(goalKind)}</span>
           </div>
-          {titleReady ? (
-            <h1 className="generating-title">Составляем план…</h1>
-          ) : (
-            <div className="skeleton-title shimmer" aria-hidden="true" />
-          )}
         </header>
 
         <div className="plan-flow" aria-hidden="true">
@@ -566,13 +566,13 @@ export default function Home() {
     return (
       <section className="plan-wrap">
         <header className="plan-header">
+          <h1>{plan.title}</h1>
           <div className="goal-badge">
             <span className="goal-badge-icon">
               <GoalIcon kind={goalKind} />
             </span>
             <span>{goalText || goalLabel(goalKind)}</span>
           </div>
-          <h1>{plan.title}</h1>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 
