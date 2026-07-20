@@ -233,6 +233,7 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-step:last-child { border-bottom: 0; }
 .plan-step.open { background: #fff; }
 .plan-step-head { width: 100%; min-height: 96px; display: grid; grid-template-columns: 54px minmax(0,1fr) auto; align-items: center; gap: 16px; padding: 18px 22px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.plan-step.open .plan-step-head { min-height: 64px; padding-bottom: 12px; }
 .plan-step-head:hover { background: rgba(241,242,253,.62); }
 .plan-number { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: #f0effd; color: #6257e9; font-size: 17px; font-weight: 650; }
 .plan-step.open .plan-number { background: #e7e4ff; }
