@@ -92,9 +92,16 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
 Главный принцип: структура плана зависит от ЦЕЛИ, а не только от темы.
 План: от 3 до 6 шагов. Без драматичных формулировок вроде «борьба за власть», если родитель так не писал.
 
+Важно про заголовок (title):
+- title отражает ТЕМУ / предмет разговора по ситуации, а НЕ цель.
+- Цель уже показывается отдельно, поэтому не начинай title с «Как договориться…», «Как понять…», «Как обозначить…», «Как поддержать…», «Как сообщить…», «Как восстановить…».
+- Формулируй коротко и по-человечески: о чём разговор.
+- Примеры хороших title: «Домашние обязанности», «Телефон перед сном», «Скрытая оценка», «Компьютер по ночам», «Конфликт с друзьями», «Смена школы».
+- Примеры плохих title: «Как договориться о распределении домашних обязанностей», «Как обозначить границу: со мной так нельзя».
+
 Верни ТОЛЬКО JSON:
 {
-  "title": string, // заголовок отражает цель, напр. «Как понять, почему ребёнок скрыл оценку»
+  "title": string, // тема разговора, без повторения цели
   "reminder": string, // короткое напоминание под цель
   "nonNegotiable": string | null, // что не обсуждается; null если не нужно
   "discussable": string | null, // что можно решить вместе; null если не нужно
@@ -125,7 +132,9 @@ export function planUserPrompt(input: PlanRequest) {
 Ситуация: ${input.situation}
 Тип цели: ${input.goalKind} (${goalLabel(input.goalKind)})
 Цель своими словами: ${input.goalText || goalLabel(input.goalKind)}
-Привычная реакция ребёнка: ${input.reaction}`;
+Привычная реакция ребёнка: ${input.reaction}
+
+Заголовок плана (title) должен назвать тему/предмет разговора по ситуации, а не пересказывать цель.`;
 }
 
 export function normalizePlan(raw: ConversationPlan): ConversationPlan {
@@ -150,7 +159,7 @@ export function normalizePlan(raw: ConversationPlan): ConversationPlan {
   }));
 
   return {
-    title: String(raw.title || "План разговора").trim(),
+    title: sanitizePlanTitle(String(raw.title || "План разговора").trim()),
     reminder: String(raw.reminder || "").trim(),
     nonNegotiable: raw.nonNegotiable
       ? String(raw.nonNegotiable).trim()
@@ -158,6 +167,19 @@ export function normalizePlan(raw: ConversationPlan): ConversationPlan {
     discussable: raw.discussable ? String(raw.discussable).trim() : undefined,
     steps: steps.filter((s) => s.title && s.action),
   };
+}
+
+/** Strip goal-style openings so title stays about the topic. */
+export function sanitizePlanTitle(title: string) {
+  const cleaned = title
+    .replace(
+      /^как\s+(договориться|понять|обозначить|сообщить|поддержать|восстановить|подготовиться)[^.?!:]{0,40}[:—-]?\s*/i,
+      "",
+    )
+    .replace(/^разговор\s+о\s+/i, "")
+    .trim();
+  if (!cleaned) return title;
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
 export const REHEARSE_SYSTEM = `Ты ведёшь репетицию разговора родителя с ребёнком для продукта «Есть разговор».

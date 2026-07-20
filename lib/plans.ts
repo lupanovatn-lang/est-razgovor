@@ -75,6 +75,18 @@ type BuildCtx = {
   reaction: string;
 };
 
+function topicTitle(ctx: BuildCtx, fallback: string) {
+  const text = `${ctx.situation} ${ctx.goalText} ${ctx.topic}`.toLowerCase();
+  if (/телефон|гаджет/.test(text)) return "Телефон перед сном";
+  if (/двойк|тройк|оценк/.test(text)) return "Скрытая оценка";
+  if (/обязан|уборк|дом/.test(text)) return "Домашние обязанности";
+  if (/компьютер|игр/.test(text)) return "Компьютер по ночам";
+  if (/школ/.test(text)) return "Смена школы";
+  if (/друг|друз/.test(text)) return "Конфликт с друзьями";
+  if (ctx.topic && ctx.topic !== "Другое") return ctx.topic;
+  return fallback;
+}
+
 function isPhoneScenario(ctx: BuildCtx) {
   return /телефон|гаджет/i.test(`${ctx.topic} ${ctx.situation} ${ctx.goalText}`);
 }
@@ -88,9 +100,7 @@ function isGradeLieScenario(ctx: BuildCtx) {
 function buildUnderstandPlan(ctx: BuildCtx): ConversationPlan {
   const grade = isGradeLieScenario(ctx);
   return {
-    title: grade
-      ? "Как понять, почему ребёнок скрыл оценку"
-      : `Как понять, что стоит за ситуацией: ${ctx.topic.toLowerCase()}`,
+    title: topicTitle(ctx, "Скрытая оценка"),
     reminder:
       "Сначала постарайтесь понять, что стояло за поступком. Не переходите к наказанию до того, как услышите версию ребёнка.",
     steps: [
@@ -184,9 +194,7 @@ function buildUnderstandPlan(ctx: BuildCtx): ConversationPlan {
 function buildAgreePlan(ctx: BuildCtx): ConversationPlan {
   const phone = isPhoneScenario(ctx);
   return {
-    title: phone
-      ? "Как договориться о телефоне перед сном"
-      : `Как договориться о правиле: ${ctx.topic.toLowerCase()}`,
+    title: topicTitle(ctx, "Телефон перед сном"),
     reminder:
       "Отделите обязательное условие от деталей, которые можно обсудить вместе. Зафиксируйте пробный срок.",
     nonNegotiable: phone
@@ -279,7 +287,7 @@ function buildAgreePlan(ctx: BuildCtx): ConversationPlan {
 
 function buildBoundaryPlan(ctx: BuildCtx): ConversationPlan {
   return {
-    title: `Как обозначить границу: ${ctx.topic.toLowerCase()}`,
+    title: topicTitle(ctx, ctx.topic || "Важная граница"),
     reminder:
       "Отделите обязательное решение от деталей, которые можно обсудить вместе.",
     nonNegotiable: "Сама граница — решение родителя. Её не выставляют на голосование.",
@@ -336,9 +344,7 @@ function buildBoundaryPlan(ctx: BuildCtx): ConversationPlan {
 function buildAnnouncePlan(ctx: BuildCtx): ConversationPlan {
   const school = /школ/i.test(`${ctx.situation} ${ctx.goalText}`);
   return {
-    title: school
-      ? "Как сообщить ребёнку о смене школы"
-      : "Как сообщить ребёнку о важном решении",
+    title: topicTitle(ctx, school ? "Смена школы" : "Важное решение"),
     reminder:
       "Сначала ясно сообщите решение. Не создавайте видимость выбора там, где решение уже принято.",
     nonNegotiable: "Само решение родителя уже принято и не выносится на голосование.",
@@ -390,9 +396,7 @@ function buildAnnouncePlan(ctx: BuildCtx): ConversationPlan {
 function buildSupportPlan(ctx: BuildCtx): ConversationPlan {
   const friends = /друг|друз/i.test(`${ctx.situation} ${ctx.topic}`);
   return {
-    title: friends
-      ? "Как поддержать ребёнка после конфликта с друзьями"
-      : `Как поддержать ребёнка: ${ctx.topic.toLowerCase()}`,
+    title: topicTitle(ctx, friends ? "Конфликт с друзьями" : ctx.topic || "Поддержка"),
     reminder:
       "Сначала выслушайте. Не предлагайте решение, пока ребёнок не попросит о помощи.",
     steps: [
@@ -446,7 +450,7 @@ function buildSupportPlan(ctx: BuildCtx): ConversationPlan {
 
 function buildTrustPlan(ctx: BuildCtx): ConversationPlan {
   return {
-    title: "Как восстановить доверие после обмана",
+    title: topicTitle(ctx, "Доверие после обмана"),
     reminder:
       "Сначала факт и версия ребёнка, затем влияние на доверие. Не начинайте с ярлыка «ты лжец».",
     steps: [
@@ -493,7 +497,7 @@ function buildTrustPlan(ctx: BuildCtx): ConversationPlan {
 
 function buildOtherPlan(ctx: BuildCtx): ConversationPlan {
   return {
-    title: `Как подготовиться к разговору: ${ctx.topic.toLowerCase()}`,
+    title: topicTitle(ctx, ctx.topic || "Сложный разговор"),
     reminder:
       "Уточните цель своими словами и держитесь одного главного результата. Не пытайтесь решить всё за один разговор.",
     steps: [
