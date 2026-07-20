@@ -1,0 +1,184 @@
+import type { ConversationPlan, GoalKind } from "./plans";
+import { goalLabel } from "./plans";
+
+const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+
+export function getOpenAIKey() {
+  return process.env.OPENAI_API_KEY?.trim() || "";
+}
+
+export async function openaiJson<T>(args: {
+  system: string;
+  user: string;
+  temperature?: number;
+}): Promise<T> {
+  const key = getOpenAIKey();
+  if (!key) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+
+  const res = await fetch(OPENAI_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      temperature: args.temperature ?? 0.6,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: args.system },
+        { role: "user", content: args.user },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`OpenAI error ${res.status}: ${detail.slice(0, 400)}`);
+  }
+
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error("Empty OpenAI response");
+  return JSON.parse(content) as T;
+}
+
+export type PlanRequest = {
+  topic: string;
+  situation: string;
+  goalKind: GoalKind;
+  goalText: string;
+  age: string;
+  reaction: string;
+};
+
+export type RehearseRequest = {
+  topic: string;
+  situation: string;
+  goalKind: GoalKind;
+  goalText: string;
+  age: string;
+  reaction: string;
+  planTitle: string;
+  openingPhrase: string;
+  messages: { role: "parent" | "child"; text: string }[];
+  parentReply: string;
+};
+
+export type RehearseResponse = {
+  childMessage: string;
+  coachTip: string;
+  tryPhrase: string;
+  signals: string[];
+  feedback?: string;
+};
+
+export const PLAN_SYSTEM = `Ты помощник продукта «Есть разговор» для родителей.
+Составь план разговора с ребёнком на русском языке.
+Главный принцип: структура плана зависит от ЦЕЛИ, а не только от темы.
+План: от 3 до 6 шагов. Без драматичных формулировок вроде «борьба за власть», если родитель так не писал.
+
+Верни ТОЛЬКО JSON:
+{
+  "title": string, // заголовок отражает цель, напр. «Как понять, почему ребёнок скрыл оценку»
+  "reminder": string, // короткое напоминание под цель
+  "nonNegotiable": string | null, // что не обсуждается; null если не нужно
+  "discussable": string | null, // что можно решить вместе; null если не нужно
+  "steps": [
+    {
+      "title": string,
+      "why": string, // зачем шаг в этой ситуации
+      "action": string, // что сделать родителю
+      "phrase": string | null, // пример фразы
+      "questions": string[] | null, // только если уместны; НЕ добавляй вопросы в шаги «сообщить решение»/«обозначить границу» где выбора нет
+      "reactions": [{"child": string, "parent": string}] | null,
+      "avoid": string | null
+    }
+  ]
+}
+
+Правила по целям:
+- understand: сначала факт без обвинения и версия ребёнка; НЕ начинай с наказания/правила/исправления оценки
+- agree: совместные варианты + обязательная граница + пробный срок
+- boundary / announce: не создавай видимость совместного выбора там, где решение уже принято; не используй «давайте вместе найдём решение»
+- support: сначала выслушать, советы — только по запросу
+- trust: факт без ярлыков → версия → причина → влияние на доверие → исправление → договорённость о правде`;
+
+export function planUserPrompt(input: PlanRequest) {
+  return `Тема: ${input.topic}
+Возраст ребёнка: ${input.age || "не указан"} лет
+Ситуация: ${input.situation}
+Тип цели: ${input.goalKind} (${goalLabel(input.goalKind)})
+Цель своими словами: ${input.goalText || goalLabel(input.goalKind)}
+Привычная реакция ребёнка: ${input.reaction}`;
+}
+
+export function normalizePlan(raw: ConversationPlan): ConversationPlan {
+  const steps = (raw.steps || []).slice(0, 6).map((s) => ({
+    title: String(s.title || "").trim(),
+    why: String(s.why || "").trim(),
+    action: String(s.action || "").trim(),
+    phrase: s.phrase ? String(s.phrase).trim() : undefined,
+    questions:
+      Array.isArray(s.questions) && s.questions.length > 0
+        ? s.questions.map(String)
+        : undefined,
+    reactions:
+      Array.isArray(s.reactions) && s.reactions.length > 0
+        ? s.reactions.map((r) => ({
+            child: String(r.child),
+            parent: String(r.parent),
+          }))
+        : undefined,
+    avoid: s.avoid ? String(s.avoid).trim() : undefined,
+  }));
+
+  return {
+    title: String(raw.title || "План разговора").trim(),
+    reminder: String(raw.reminder || "").trim(),
+    nonNegotiable: raw.nonNegotiable
+      ? String(raw.nonNegotiable).trim()
+      : undefined,
+    discussable: raw.discussable ? String(raw.discussable).trim() : undefined,
+    steps: steps.filter((s) => s.title && s.action),
+  };
+}
+
+export const REHEARSE_SYSTEM = `Ты ведёшь репетицию разговора родителя с ребёнком для продукта «Есть разговор».
+Отвечай на русском. Ребёнок говорит как сверстник своего возраста, без карикатуры.
+Учитывай цель родителя: не уводи разговор в наказание, если цель — понять; не делай вид, что всё обсуждаемо, если цель — граница/решение.
+
+Верни ТОЛЬКО JSON:
+{
+  "childMessage": string, // следующая реплика ребёнка
+  "coachTip": string, // короткая подсказка родителю (видит только он)
+  "tryPhrase": string, // пример ответа родителя
+  "signals": string[], // 3 пункта «что тренируем»
+  "feedback": string | null // краткая ОС после нескольких реплик, иначе null
+}`;
+
+export function rehearseUserPrompt(input: RehearseRequest) {
+  const history = input.messages
+    .map((m) => `${m.role === "parent" ? "Родитель" : "Ребёнок"}: ${m.text}`)
+    .join("\n");
+  return `Контекст:
+Тема: ${input.topic}
+Возраст: ${input.age}
+Ситуация: ${input.situation}
+Цель: ${input.goalKind} — ${input.goalText}
+Привычная реакция: ${input.reaction}
+План: ${input.planTitle}
+Стартовая фраза родителя: ${input.openingPhrase}
+
+История:
+${history || "(только стартовая фраза)"}
+
+Новый ответ родителя: ${input.parentReply}
+
+Сгенерируй реакцию ребёнка и подсказку тренера.`;
+}
