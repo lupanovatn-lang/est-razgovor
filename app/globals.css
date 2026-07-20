@@ -189,15 +189,6 @@ button { color: inherit; }
   font-family: var(--font-sans);
 }
 .empty-plan p { margin: 0; color: #7c8099; font-size: 14px; line-height: 1.55; }
-.generating-status {
-  margin: 0 0 18px;
-  color: #2f3144;
-  font-size: 16px;
-  font-weight: 650;
-  letter-spacing: -.015em;
-  line-height: 1.35;
-  font-family: var(--font-sans);
-}
 
 .generating-progress {
   width: min(360px, 92%);
@@ -232,6 +223,7 @@ button { color: inherit; }
   font-weight: 650;
   letter-spacing: -.015em;
   line-height: 1.35;
+  font-family: var(--font-sans);
 }
 .generating-bar {
   height: 4px;
