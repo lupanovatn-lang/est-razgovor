@@ -543,14 +543,14 @@ export default function Home() {
           <i />
           <i />
         </div>
-        <p className="generating-status">{stage.text}</p>
+        <p className="generating-status">Составляем план разговора</p>
         <div
           className="generating-bar"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={progress}
-          aria-label={stage.text}
+          aria-label="Составляем план разговора"
         >
           <span style={{ width: `${progress}%` }} />
         </div>
