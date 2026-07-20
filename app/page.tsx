@@ -896,8 +896,8 @@ export default function Home() {
             <div className="messages">
               {messages.length === 0 && !rehearseLoading && (
                 <div className="messages-empty">
-                  Начните разговор сами — напишите первую фразу так, как сказали бы
-                  ребёнку.
+                  Сформулируйте диалог по шагам плана справа. Напишите первую фразу сами —
+                  помощь с формулировками можно открыть в шаге.
                 </div>
               )}
               {messages.map((m, i) => (
@@ -945,14 +945,19 @@ export default function Home() {
             <div className="coach-title">
               <span>✦</span>
               <div>
-                <b>Подсказки по плану</b>
-                <small>видите только вы · можно свернуть</small>
+                <b>Задание по плану</b>
+                <small>Структура шагов — опирайтесь на неё в диалоге</small>
               </div>
             </div>
 
+            <p className="coach-brief">
+              Сформулируйте разговор по шагам ниже. Нужна помощь — откройте шаг:
+              там фразы и вопросы из плана.
+            </p>
+
             {coachTip && messages.length > 0 && (
               <div className="coach-live">
-                <span>Сейчас</span>
+                <span>Подсказка по ходу</span>
                 <p>{coachTip}</p>
                 {tryPhrase && (
                   <button
@@ -961,13 +966,14 @@ export default function Home() {
                     disabled={rehearseLoading}
                     onClick={() => setReply(tryPhrase)}
                   >
-                    Вставить предложенную фразу
+                    Вставить фразу
                   </button>
                 )}
                 {feedback && <p className="coach-live-note">{feedback}</p>}
               </div>
             )}
 
+            <div className="coach-steps-label">Шаги плана</div>
             <div className="coach-steps">
               {(plan?.steps ?? []).map((step, i) => {
                 const open = openCoachStep === i;
@@ -987,16 +993,21 @@ export default function Home() {
                     >
                       <span className="coach-step-num">{i + 1}</span>
                       <b>{step.title}</b>
-                      <span className="coach-step-toggle">{open ? "Свернуть" : "Подсказки"}</span>
+                      <span className="coach-step-toggle">
+                        {open ? "Свернуть" : hasHints ? "Помощь" : ""}
+                      </span>
                     </button>
-                    {open && hasHints && (
+                    {open && (
                       <div className="coach-step-body">
                         {(step.action || step.why) && (
-                          <p>{step.action || step.why}</p>
+                          <div className="coach-block">
+                            <span>Что сделать в этом шаге</span>
+                            <p>{step.action || step.why}</p>
+                          </div>
                         )}
                         {step.phrase && (
                           <div className="try">
-                            <span>Можно сказать</span>
+                            <span>Фраза</span>
                             <p>«{step.phrase}»</p>
                             <button
                               type="button"
@@ -1004,13 +1015,13 @@ export default function Home() {
                               disabled={rehearseLoading}
                               onClick={() => setReply(step.phrase || "")}
                             >
-                              Вставить в ответ
+                              Вставить
                             </button>
                           </div>
                         )}
                         {step.questions && step.questions.length > 0 && (
                           <div className="coach-questions">
-                            <span>Можно спросить</span>
+                            <span>Вопросы</span>
                             <ul>
                               {step.questions.map((q) => (
                                 <li key={q}>
@@ -1033,11 +1044,9 @@ export default function Home() {
                             <p>{step.avoid}</p>
                           </div>
                         )}
-                      </div>
-                    )}
-                    {open && !hasHints && (
-                      <div className="coach-step-body">
-                        <p>Для этого шага опирайтесь на цель разговора и спокойный тон.</p>
+                        {!hasHints && (
+                          <p>Сформулируйте этот шаг своими словами — по цели разговора.</p>
+                        )}
                       </div>
                     )}
                   </article>
