@@ -39,13 +39,7 @@ const reactions = [
 
 const STORAGE_KEY = "est-razgovor-conversations";
 
-const GENERATING_STATUSES = [
-  "Считываем ситуацию",
-  "Уточняем цель разговора",
-  "Подбираем структуру шагов",
-  "Формулируем фразы и реакции",
-  "Собираем план",
-];
+const GENERATING_STEP_SLOTS = 4;
 
 function GoalIcon({ kind }: { kind: GoalKind }) {
   // Always show a target for the conversation goal.
@@ -125,8 +119,8 @@ export default function Home() {
     }
     setStatusIndex(0);
     const id = window.setInterval(() => {
-      setStatusIndex((i) => Math.min(i + 1, GENERATING_STATUSES.length - 1));
-    }, 1600);
+      setStatusIndex((i) => Math.min(i + 1, GENERATING_STEP_SLOTS));
+    }, 900);
     return () => window.clearInterval(id);
   }, [generating]);
 
@@ -520,74 +514,43 @@ export default function Home() {
   }
 
   function GeneratingState() {
-    const skeletonCount = Math.min(4, statusIndex + 1);
-    const activeLabel = GENERATING_STATUSES[statusIndex];
+    const filled = Math.min(GENERATING_STEP_SLOTS, statusIndex);
+    const titleReady = statusIndex > 0;
 
     return (
-      <div className="generating-wrap" aria-live="polite" aria-busy="true">
-        <aside className="generating-card">
-          <div className="goal-badge compact">
+      <section className="plan-wrap generating-plan" aria-live="polite" aria-busy="true">
+        <header className="plan-header">
+          <div className="goal-badge">
             <span className="goal-badge-icon">
               <GoalIcon kind={goalKind} />
             </span>
             <span>{goalText || goalLabel(goalKind)}</span>
           </div>
-          <h1>Составляем план</h1>
-          <p className="generating-current">{activeLabel}…</p>
+          {titleReady ? (
+            <h1 className="generating-title">Составляем план…</h1>
+          ) : (
+            <div className="skeleton-title shimmer" aria-hidden="true" />
+          )}
+        </header>
 
-          <ul className="generating-statuses">
-            {GENERATING_STATUSES.map((label, i) => {
-              const done = i < statusIndex;
-              const active = i === statusIndex;
-              return (
-                <li key={label} className={done ? "done" : active ? "active" : ""}>
-                  <span className="status-mark" aria-hidden="true">
-                    {done ? (
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path
-                          d="M3 7.2 5.8 10 11 3.8"
-                          stroke="currentColor"
-                          strokeWidth="1.7"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    ) : active ? (
-                      <i className="status-pulse" />
-                    ) : (
-                      <i className="status-idle" />
-                    )}
+        <div className="plan-flow" aria-hidden="true">
+          {Array.from({ length: GENERATING_STEP_SLOTS }, (_, i) => {
+            const state =
+              i < filled - 1 ? "done" : i === filled - 1 ? "writing" : "wait";
+            return (
+              <article key={i} className={`plan-step skeleton-row ${state}`}>
+                <div className="plan-step-head">
+                  <span className="plan-number">{i + 1}</span>
+                  <span className="plan-step-copy">
+                    <span className="skeleton-line shimmer title-line" />
+                    <span className="skeleton-line shimmer short" />
                   </span>
-                  {label}
-                </li>
-              );
-            })}
-          </ul>
-        </aside>
-
-        <div className="generating-preview" aria-hidden="true">
-          <div className="skeleton-head">
-            <div className="skeleton-badge shimmer" />
-            <div className="skeleton-title shimmer" />
-          </div>
-          <div className="skeleton-plan">
-            {Array.from({ length: 4 }, (_, i) => {
-              const state =
-                i < skeletonCount - 1 ? "done" : i === skeletonCount - 1 ? "writing" : "wait";
-              return (
-                <div key={i} className={`skeleton-step ${state}`}>
-                  <span className="skeleton-num">{i + 1}</span>
-                  <div className="skeleton-copy">
-                    <div className="skeleton-line shimmer" />
-                    <div className="skeleton-line shimmer short" />
-                  </div>
                 </div>
-              );
-            })}
-          </div>
-          <p className="skeleton-caption">Черновик плана собирается на глазах</p>
+              </article>
+            );
+          })}
         </div>
-      </div>
+      </section>
     );
   }
 
