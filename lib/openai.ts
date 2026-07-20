@@ -102,11 +102,12 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
     {
       "title": string,
       "why": string, // зачем шаг в этой ситуации
-      "action": string, // что сделать родителю
-      "phrase": string | null, // пример фразы
-      "questions": string[] | null, // только если уместны; НЕ добавляй вопросы в шаги «сообщить решение»/«обозначить границу» где выбора нет
+      "action": string, // как действовать — пояснение без карточки
+      "phrase": string | null, // можно сказать
+      "questions": string[] | null, // можно спросить; только если уместны
       "reactions": [{"child": string, "parent": string}] | null,
-      "avoid": string | null
+      "avoid": string | null, // лучше не говорить
+      "outcome": string | null // к чему прийти в этом шаге; null если не нужно
     }
   ]
 }
@@ -145,6 +146,7 @@ export function normalizePlan(raw: ConversationPlan): ConversationPlan {
           }))
         : undefined,
     avoid: s.avoid ? String(s.avoid).trim() : undefined,
+    outcome: s.outcome ? String(s.outcome).trim() : undefined,
   }));
 
   return {

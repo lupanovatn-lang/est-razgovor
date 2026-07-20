@@ -595,44 +595,65 @@ export default function Home() {
         </button>
         {open && (
           <div className="plan-step-body">
-            <div className="step-block">
-              <span>Что сделать</span>
-              <p>{planStep.action}</p>
-            </div>
-            {planStep.phrase && (
-              <div className="step-block">
-                <span>Пример фразы</span>
-                <blockquote>«{planStep.phrase}»</blockquote>
-              </div>
-            )}
-            {planStep.questions && planStep.questions.length > 0 && (
-              <div className="step-block">
-                <span>Вопросы ребёнку</span>
-                <div className="question-list">
-                  {planStep.questions.map((q) => (
-                    <p key={q}>{q}</p>
+            <div className="step-modules">
+              {planStep.action && (
+                <div className="step-module">
+                  <h3>Как действовать</h3>
+                  <p className="step-prose">{planStep.action}</p>
+                </div>
+              )}
+
+              {planStep.phrase && (
+                <div className="step-module">
+                  <h3>Можно сказать</h3>
+                  <div className="quote-card">«{planStep.phrase}»</div>
+                </div>
+              )}
+
+              {planStep.questions && planStep.questions.length > 0 && (
+                <div className="step-module">
+                  <h3>Можно спросить</h3>
+                  <div className="quote-stack">
+                    {planStep.questions.map((q) => (
+                      <div className="quote-card" key={q}>
+                        {q}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {planStep.reactions && planStep.reactions.length > 0 && (
+                <div className="dialog-pairs">
+                  {planStep.reactions.map((r) => (
+                    <div className="dialog-pair" key={`${r.child}-${r.parent}`}>
+                      <div className="step-module">
+                        <h3>Возможная реакция ребёнка</h3>
+                        <div className="quote-card">{r.child}</div>
+                      </div>
+                      <div className="step-module">
+                        <h3>Можно ответить</h3>
+                        <div className="quote-card">{r.parent}</div>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-            )}
-            {planStep.reactions && planStep.reactions.length > 0 && (
-              <div className="step-block">
-                <span>Возможные реакции</span>
-                {planStep.reactions.map((r) => (
-                  <div className="reaction-pair" key={r.child}>
-                    <p>
-                      <b>Ребёнок:</b> {r.child}
-                    </p>
-                    <p>
-                      <b>Можно ответить:</b> {r.parent}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-            {planStep.avoid && (
-              <div className="avoid-line">Чего лучше не говорить: {planStep.avoid}</div>
-            )}
+              )}
+
+              {planStep.avoid && (
+                <div className="step-module">
+                  <h3>Лучше не говорить</h3>
+                  <div className="warn-chip">{planStep.avoid}</div>
+                </div>
+              )}
+
+              {planStep.outcome && (
+                <div className="step-module">
+                  <h3>К чему прийти</h3>
+                  <p className="step-prose">{planStep.outcome}</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </article>

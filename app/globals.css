@@ -87,14 +87,15 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .boundary-split > div { padding: 16px 18px; border-radius: 14px; border: 1px solid #e0e2ee; background: rgba(255,255,255,.88); }
 .boundary-split span { display: block; margin-bottom: 8px; color: #6b62e8; font-size: 11px; font-weight: 650; }
 .boundary-split p { margin: 0; color: #3f435a; font-size: 12px; line-height: 1.55; }
-.step-block { margin-bottom: 14px; }
-.step-block:last-child { margin-bottom: 0; }
-.step-block > span { display: block; margin-bottom: 6px; color: #6257e9; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-.reaction-pair { padding: 10px 0; border-bottom: 1px solid #dedff0; }
-.reaction-pair:last-child { border-bottom: 0; padding-bottom: 0; }
-.reaction-pair p { margin: 0 0 6px; }
-.reaction-pair p:last-child { margin-bottom: 0; }
-.avoid-line { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: #fff0ec; color: #9d665c; font-size: 11px; line-height: 1.45; }
+.step-modules { display: flex; flex-direction: column; gap: 22px; max-width: 520px; }
+.step-module { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.step-module h3 { margin: 0; color: #3f435a; font-size: 13px; font-weight: 650; letter-spacing: -.01em; text-transform: none; }
+.step-prose { margin: 0; max-width: 48ch; color: #5a5e76; font-size: 13px; line-height: 1.55; }
+.quote-stack { display: flex; flex-direction: column; gap: 8px; max-width: 440px; }
+.quote-card { width: fit-content; max-width: 100%; padding: 12px 14px; border-radius: 12px; background: #eef0fb; color: #34374f; font-size: 13px; line-height: 1.5; }
+.dialog-pairs { display: flex; flex-direction: column; gap: 22px; }
+.dialog-pair { display: flex; flex-direction: column; gap: 22px; }
+.warn-chip { width: fit-content; max-width: 440px; padding: 10px 12px; border-radius: 10px; background: #fff1ea; color: #9a6558; font-size: 12px; line-height: 1.45; }
 .reaction-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .reaction { border: 1px solid #e0e2ef; background: #fafaff; border-radius: 10px; padding: 11px 12px; text-align: left; font-size: 12px; cursor: pointer; }
 .reaction:hover { background: #f2f2fb; }
@@ -156,7 +157,7 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-flow { overflow: hidden; border: 1px solid #e1e3ef; border-radius: 17px; background: rgba(255,255,255,.78); }
 .plan-step { border-bottom: 1px solid #e5e7f0; }
 .plan-step:last-child { border-bottom: 0; }
-.plan-step.open { background: rgba(255,255,255,.92); }
+.plan-step.open { background: #fff; }
 .plan-step-head { width: 100%; min-height: 96px; display: grid; grid-template-columns: 54px minmax(0,1fr) auto; align-items: center; gap: 16px; padding: 18px 22px; border: 0; background: transparent; text-align: left; cursor: pointer; }
 .plan-step-head:hover { background: rgba(241,242,253,.62); }
 .plan-number { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: #f0effd; color: #6257e9; font-size: 17px; font-weight: 650; }
@@ -167,13 +168,8 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-more { display: inline-flex; align-items: center; gap: 7px; color: #6257e9; font-size: 11px; font-weight: 600; }
 .plan-more .caret { width: 16px; height: 16px; object-fit: contain; transition: transform .18s ease; }
 .plan-more .caret.open { transform: rotate(180deg); }
-.plan-step-body { margin: -2px 30px 22px 92px; padding: 17px 19px; border-radius: 12px; background: #f2f2fc; color: #4f536d; }
-.plan-step-body p { margin: 0; font-size: 12px; line-height: 1.6; }
-.plan-step-body blockquote { margin: 0 0 12px; padding: 0 0 0 14px; border-left: 3px solid #7064ee; color: #34374f; font-size: 13px; line-height: 1.58; }
-.question-list { display: grid; gap: 0; }
-.question-list p { padding: 10px 0; border-bottom: 1px solid #dedff0; }
-.question-list p:first-child { padding-top: 0; }
-.question-list p:last-child { padding-bottom: 0; border-bottom: 0; }
+.plan-step-body { margin: 0 30px 26px 92px; padding: 4px 0 8px; border-radius: 0; background: transparent; color: #4f536d; }
+.plan-step-body p { margin: 0; font-size: 13px; line-height: 1.55; }
 .plan-cheatsheet { position: sticky; top: 22px; padding: 24px 22px 20px; border: 1px solid #e0e2ee; border-radius: 17px; background: rgba(255,255,255,.9); }
 .plan-cheatsheet h2 { margin: 0 0 6px; font-size: 17px; letter-spacing: -.015em; }
 .prep-meta { display: grid; gap: 23px; margin-top: 24px; }
