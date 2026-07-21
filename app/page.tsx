@@ -805,6 +805,27 @@ export default function Home() {
           : `Если ребёнок ${when.trim()}`
         : "Если ребёнок…";
 
+    const showChildLine = (text?: string) => {
+      const t = (text || "").trim();
+      if (!t) return false;
+      if (/^[-–—.•…]+$/.test(t)) return false;
+      if (/^(молчит|тишина|ничего|…|\.\.\.)$/i.test(t)) return false;
+      return true;
+    };
+
+    const renderReaction = (r: NonNullable<PlanStep["reactions"]>[number], key: string) => (
+      <div className="step-block" key={key}>
+        <div className="step-block-label">{reactionTitle(r.when)}</div>
+        {showChildLine(r.child) && <div className="step-chip muted">{r.child}</div>}
+        {r.parent?.trim() && (
+          <>
+            <div className="step-block-label nest">Можно ответить</div>
+            <div className="step-chip">{r.parent}</div>
+          </>
+        )}
+      </div>
+    );
+
     return (
       <article className={open ? "plan-step open" : "plan-step"}>
         <button
@@ -868,28 +889,13 @@ export default function Home() {
               </div>
             )}
 
-            {primaryReaction && (
-              <div className="step-block">
-                <div className="step-block-label">
-                  {reactionTitle(primaryReaction.when)}
-                </div>
-                <div className="step-chip-stack">
-                  <div className="step-chip muted">{primaryReaction.child}</div>
-                </div>
-                <div className="step-block-label nest">Можно ответить</div>
-                <div className="step-chip">{primaryReaction.parent}</div>
-              </div>
-            )}
+            {primaryReaction &&
+              renderReaction(primaryReaction, `${primaryReaction.child}-${primaryReaction.parent}`)}
 
             {showExtras &&
-              extraReactions.map((r) => (
-                <div className="step-block" key={`${r.child}-${r.parent}`}>
-                  <div className="step-block-label">{reactionTitle(r.when)}</div>
-                  <div className="step-chip muted">{r.child}</div>
-                  <div className="step-block-label nest">Можно ответить</div>
-                  <div className="step-chip">{r.parent}</div>
-                </div>
-              ))}
+              extraReactions.map((r) =>
+                renderReaction(r, `${r.child}-${r.parent}`),
+              )}
 
             {extraReactions.length > 0 && (
               <button
