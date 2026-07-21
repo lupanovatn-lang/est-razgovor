@@ -760,6 +760,25 @@ export default function Home() {
       openMobileSettings();
     };
 
+    const steps = plan.steps;
+    const total = steps.length;
+    const activeIndex = Math.min(
+      total - 1,
+      Math.max(0, (Number(openPlanStep) || 1) - 1),
+    );
+    const activeStep = steps[activeIndex];
+    const activeN = String(activeIndex + 1).padStart(2, "0");
+
+    const goTo = (index: number) => {
+      const next = Math.min(total - 1, Math.max(0, index));
+      setOpenPlanStep(String(next + 1).padStart(2, "0"));
+      setStepTab((prev) => {
+        const copy = { ...prev };
+        delete copy[activeN];
+        return copy;
+      });
+    };
+
     return (
       <section
         ref={planStartRef}
@@ -779,16 +798,50 @@ export default function Home() {
             </span>
           </div>
           <p className="plan-howto">
-            Откройте шаг → посмотрите фразу → когда будете готовы, потренируйте разговор.
+            Сначала посмотрите общий план, затем откройте шаг — там фраза, которую можно сказать.
           </p>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 
-        <div className="plan-flow">
-          {plan.steps.map((s, i) => {
-            const n = String(i + 1).padStart(2, "0");
-            return <PlanItem key={n} n={n} title={s.title} preview={s.why} step={s} />;
-          })}
+        <div className="plan-cards">
+          <section className="plan-overview-card" aria-label="Общий план">
+            <div className="plan-card-kicker">Общий план</div>
+            <h2 className="plan-card-title">Что делать по шагам</h2>
+            <ol className="plan-overview-list">
+              {steps.map((s, i) => {
+                const selected = i === activeIndex;
+                return (
+                  <li key={`${s.title}-${i}`}>
+                    <button
+                      type="button"
+                      className={
+                        selected
+                          ? "plan-overview-item active"
+                          : "plan-overview-item"
+                      }
+                      aria-current={selected ? "step" : undefined}
+                      onClick={() => goTo(i)}
+                    >
+                      <span className="plan-overview-num">{i + 1}</span>
+                      <span className="plan-overview-text">{s.title}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+
+          {activeStep && (
+            <StepFocusCard
+              key={activeN}
+              n={activeN}
+              index={activeIndex}
+              total={total}
+              step={activeStep}
+              onPrev={() => goTo(activeIndex - 1)}
+              onNext={() => goTo(activeIndex + 1)}
+            />
+          )}
         </div>
 
         <div className="plan-bottom-actions">
@@ -837,17 +890,21 @@ export default function Home() {
     );
   }
 
-  function PlanItem({
+  function StepFocusCard({
     n,
-    title,
+    index,
+    total,
     step: planStep,
+    onPrev,
+    onNext,
   }: {
     n: string;
-    title: string;
-    preview: string;
+    index: number;
+    total: number;
     step: PlanStep;
+    onPrev: () => void;
+    onNext: () => void;
   }) {
-    const open = openPlanStep === n;
     const say = stepPhrases(planStep);
     const primaryPhrase = say[0];
     const extraPhrases = say.slice(1);
@@ -990,83 +1047,83 @@ export default function Home() {
     const activeTab = tipTabs.find((t) => t.id === activeTabId);
 
     return (
-      <article className={open ? "plan-step open" : "plan-step"}>
-        <button
-          className="plan-step-head"
-          aria-expanded={open}
-          onClick={() => {
-            setOpenPlanStep(open ? "" : n);
-            if (open) {
-              setStepTab((prev) => {
-                const next = { ...prev };
-                delete next[n];
-                return next;
-              });
-            }
-          }}
-        >
-          <span className="plan-number">{Number(n)}</span>
-          <span className="plan-step-copy">
-            <b>{title}</b>
-          </span>
-          <span className="plan-more">
-            {open ? "Свернуть" : "Открыть"}
-            <img className={open ? "caret open" : "caret"} src="/caret-ref.png" alt="" />
-          </span>
-        </button>
-        {open && (
-          <div className="plan-step-body">
-            {planStep.action && (
-              <p className="step-instruction">{planStep.action}</p>
-            )}
-
-            {primaryPhrase && (
-              <div className="step-block">
-                <div className="step-block-label">Можно сказать</div>
-                <div className="step-chip">«{primaryPhrase}»</div>
-              </div>
-            )}
-
-            {primaryQuestion && (
-              <div className="step-block">
-                <div className="step-block-label">Можно спросить</div>
-                <div className="step-chip">{primaryQuestion}</div>
-              </div>
-            )}
-
-            {tipTabs.length > 0 && (
-              <div className="step-tip-tabs" role="tablist" aria-label="Дополнительные подсказки">
-                {tipTabs.map((tab) => {
-                  const selected = activeTabId === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      role="tab"
-                      aria-selected={selected}
-                      className={selected ? "step-tip-tab active" : "step-tip-tab"}
-                      onClick={() =>
-                        setStepTab((prev) => ({
-                          ...prev,
-                          [n]: selected ? "" : tab.id,
-                        }))
-                      }
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {activeTab && (
-              <div className="step-tip-panel" role="tabpanel">
-                {activeTab.render()}
-              </div>
-            )}
+      <section className="plan-focus-card" aria-label={`Шаг ${index + 1}`}>
+        <div className="plan-focus-top">
+          <div className="plan-card-kicker">
+            Шаг {index + 1} из {total}
           </div>
-        )}
-      </article>
+          <div className="plan-focus-nav">
+            <button
+              type="button"
+              className="plan-nav-btn"
+              onClick={onPrev}
+              disabled={index <= 0}
+            >
+              Назад
+            </button>
+            <button
+              type="button"
+              className="plan-nav-btn"
+              onClick={onNext}
+              disabled={index >= total - 1}
+            >
+              Дальше
+            </button>
+          </div>
+        </div>
+        <h2 className="plan-card-title">{planStep.title}</h2>
+
+        <div className="plan-focus-body">
+          {planStep.action && (
+            <p className="step-instruction">{planStep.action}</p>
+          )}
+
+          {primaryPhrase && (
+            <div className="step-block">
+              <div className="step-block-label">Можно сказать</div>
+              <div className="step-chip">«{primaryPhrase}»</div>
+            </div>
+          )}
+
+          {primaryQuestion && (
+            <div className="step-block">
+              <div className="step-block-label">Можно спросить</div>
+              <div className="step-chip">{primaryQuestion}</div>
+            </div>
+          )}
+
+          {tipTabs.length > 0 && (
+            <div className="step-tip-tabs" role="tablist" aria-label="Дополнительные подсказки">
+              {tipTabs.map((tab) => {
+                const selected = activeTabId === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    className={selected ? "step-tip-tab active" : "step-tip-tab"}
+                    onClick={() =>
+                      setStepTab((prev) => ({
+                        ...prev,
+                        [n]: selected ? "" : tab.id,
+                      }))
+                    }
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {activeTab && (
+            <div className="step-tip-panel" role="tabpanel">
+              {activeTab.render()}
+            </div>
+          )}
+        </div>
+      </section>
     );
   }
 
