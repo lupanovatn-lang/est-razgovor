@@ -125,9 +125,7 @@ export default function Home() {
   const planStartRef = useRef<HTMLElement | null>(null);
 
   const childName = age ? `${age} лет` : "ребёнок";
-  const formValid = Boolean(
-    topic.trim() && situation.trim() && goalKind && age.trim(),
-  );
+  const formValid = Boolean(situation.trim() && goalKind && age.trim());
   useEffect(() => {
     setSavedList(loadSaved());
   }, []);
@@ -219,15 +217,13 @@ export default function Home() {
     setFormAttempted(true);
     if (!formValid || !goalKind) {
       setPlanError("Заполните обязательные поля со звёздочкой");
-      const missing = !topic.trim()
-        ? "topic"
-        : !situation.trim()
-          ? "situation"
-          : !goalKind
-            ? "goalKind"
-            : !age.trim()
-              ? "age"
-              : null;
+      const missing = !situation.trim()
+        ? "situation"
+        : !goalKind
+          ? "goalKind"
+          : !age.trim()
+            ? "age"
+            : null;
       if (missing) {
         window.setTimeout(() => {
           document.getElementById(missing)?.focus();
@@ -372,7 +368,7 @@ export default function Home() {
       plan.title,
       "",
       `Цель: ${resolvedGoal}`,
-      `Тема: ${topic}`,
+      `Тема: ${topic.trim() || "не указана"}`,
       `Возраст: ${childName}`,
       "",
       ...plan.steps.map((s, i) => {
@@ -493,7 +489,10 @@ export default function Home() {
           >
             <span>
               <b>Параметры разговора</b>
-              <small>{topic} · {age} лет</small>
+              <small>
+                {topic.trim() ? `${topic} · ` : ""}
+                {age} лет
+              </small>
             </span>
             <span>Изменить</span>
           </button>
@@ -510,18 +509,15 @@ export default function Home() {
 
           <fieldset className="settings-fields" disabled={paramsLocked}>
           <label className="field-label" htmlFor="topic">
-            Тема <span className="field-req">*</span>
+            Тема
           </label>
           <div className="select-wrap">
             <select
               id="topic"
               value={topic}
-              required
               onChange={(e) => setTopic(e.target.value)}
             >
-              <option value="" disabled>
-                Выберите тему
-              </option>
+              <option value="">Не указано</option>
               {topics.map((t) => (
                 <option key={t} value={t}>
                   {t}

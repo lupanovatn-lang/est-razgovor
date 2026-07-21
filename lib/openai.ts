@@ -187,7 +187,7 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Разго�
 export function planUserPrompt(input: PlanRequest) {
   const customGoal = input.goalText.trim() && !isGenericGoalText(input.goalText);
   const when = reactionWhenLabel(input.reaction);
-  return `Тема: ${input.topic}
+  return `Тема: ${input.topic.trim() || "не указана"}
 Возраст ребёнка: ${input.age || "не указан"} лет
 Ситуация: ${input.situation}
 Тип цели (базовый): ${input.goalKind} (${goalLabel(input.goalKind)})
