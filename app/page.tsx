@@ -778,20 +778,27 @@ export default function Home() {
         aria-labelledby="plan-title"
       >
         <header className="plan-header">
-          <h1 id="plan-title">{plan.title}</h1>
-          <div className="plan-goal-chip">
-            <span className="plan-goal-chip-icon" aria-hidden="true">
-              <GoalIcon kind={goalKind || "other"} />
-            </span>
-            <span>{goalKind ? goalLabel(goalKind) : "Цель разговора"}</span>
+          <div className="plan-header-row">
+            <h1 id="plan-title">{plan.title}</h1>
+            <div className="plan-goal-chip">
+              <span className="plan-goal-chip-icon" aria-hidden="true">
+                <GoalIcon kind={goalKind || "other"} />
+              </span>
+              <span>{goalKind ? goalLabel(goalKind) : "Цель разговора"}</span>
+            </div>
           </div>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 
         <div className="plan-split">
           <section className="plan-overview-card" aria-label="Общий план">
-            <div className="plan-card-kicker">План</div>
-            <h2 className="plan-card-title">Шаги разговора</h2>
+            <div className="plan-overview-head">
+              <span className="plan-card-kicker">План</span>
+              <span className="plan-overview-count">
+                {total}{" "}
+                {total === 1 ? "шаг" : total < 5 ? "шага" : "шагов"}
+              </span>
+            </div>
             <ol className="plan-overview-list">
               {steps.map((s, i) => {
                 const selected = i === activeIndex;
