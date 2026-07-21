@@ -779,14 +779,15 @@ export default function Home() {
         aria-labelledby="plan-title"
       >
         <header className="plan-header">
-          <div className="plan-header-row">
-            <h1 id="plan-title">{plan.title}</h1>
-            <div className="plan-goal-chip">
-              <span className="plan-goal-chip-icon" aria-hidden="true">
-                <GoalIcon kind={goalKind || "other"} />
-              </span>
-              <span>{goalKind ? goalLabel(goalKind) : "Цель разговора"}</span>
-            </div>
+          <h1 id="plan-title">{plan.title}</h1>
+          <div className="plan-goal-chip">
+            <span className="plan-goal-chip-icon" aria-hidden="true">
+              <GoalIcon kind={goalKind || "other"} />
+            </span>
+            <span className="plan-goal-chip-text">
+              <span className="plan-goal-chip-label">Цель</span>
+              {goalKind ? goalLabel(goalKind) : "Цель разговора"}
+            </span>
           </div>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>

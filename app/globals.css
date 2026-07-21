@@ -612,17 +612,10 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .rehearse-cta button { border: 0; border-radius: 9px; background: white; padding: 11px 15px; color: #554ad8; font-size: 11px; font-weight: 700; cursor: pointer; }
 
 /* Plan workspace */
-.plan-header { margin: 0 0 18px; }
-.plan-header-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 14px;
-}
+.plan-header { margin: 0 0 20px; }
 .plan-header h1 {
   margin: 0;
-  max-width: none;
-  flex: 1 1 240px;
+  max-width: 28ch;
   font-family: var(--font-sans);
   font-size: 28px;
   font-weight: 650;
@@ -633,21 +626,23 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-header p { margin: 0; color: #80849f; font-size: 14px; }
 .plan-goal-chip {
   display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 7px 12px 7px 7px;
-  border-radius: 12px;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 10px 14px 10px 10px;
+  border-radius: 14px;
   background: #eef0ff;
-  color: #4d4f6a;
-  font-size: 14px;
+  color: #2f3248;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 1.2;
-  flex: 0 0 auto;
+  line-height: 1.35;
+  letter-spacing: -.01em;
+  max-width: min(42ch, 100%);
 }
 .plan-goal-chip-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
   border-radius: 50%;
   display: grid;
   place-items: center;
@@ -655,7 +650,20 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   color: #6257e9;
   flex: 0 0 auto;
 }
-.plan-goal-chip-icon svg { width: 13px; height: 13px; }
+.plan-goal-chip-icon svg { width: 14px; height: 14px; }
+.plan-goal-chip-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 1px;
+}
+.plan-goal-chip-label {
+  color: #7a76c9;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
 .plan-split {
   display: grid;
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
