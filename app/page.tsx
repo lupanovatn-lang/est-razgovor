@@ -6,6 +6,7 @@ import {
   goalLabel,
   goalOptions,
   isGenericGoalText,
+  stepPhrases,
   type ConversationPlan,
   type GoalKind,
   type PlanStep,
@@ -374,7 +375,7 @@ export default function Home() {
       ...plan.steps.map(
         (s, i) =>
           `${i + 1}. ${s.title}\nЗачем: ${s.why}\nЧто сделать: ${s.action}${
-            s.phrase ? `\nФраза: ${s.phrase}` : ""
+            stepPhrases(s)[0] ? `\nФраза: ${stepPhrases(s)[0]}` : ""
           }`,
       ),
     ];
@@ -390,7 +391,7 @@ export default function Home() {
   };
 
   const openingPhrase =
-    plan?.steps.find((s) => s.phrase)?.phrase ||
+    plan?.steps.map(stepPhrases).find((p) => p.length)?.[0] ||
     "Я хочу спокойно поговорить. Мне важно услышать тебя.";
 
   const startRehearsal = () => {
@@ -794,10 +795,15 @@ export default function Home() {
     const primaryReaction = reactionsList[0];
     const extraReactions = reactionsList.slice(1);
     const showExtras = !!moreReactions[n];
-    const hasScenario =
-      !!planStep.phrase ||
-      (planStep.questions && planStep.questions.length > 0) ||
-      reactionsList.length > 0;
+    const say = stepPhrases(planStep);
+    const questions = planStep.questions ?? [];
+
+    const reactionTitle = (when?: string) =>
+      when?.trim()
+        ? /^если\s/i.test(when.trim())
+          ? when.trim()
+          : `Если ребёнок ${when.trim()}`
+        : "Если ребёнок…";
 
     return (
       <article className={open ? "plan-step open" : "plan-step"}>
@@ -818,90 +824,116 @@ export default function Home() {
         </button>
         {open && (
           <div className="plan-step-body">
-            {hasScenario ? (
-              <div className="scenario-card">
-                <div className="scenario-card-title">Как может пройти разговор</div>
-                <div className="scenario-flow">
-                  {planStep.phrase && (
-                    <div className="scenario-turn parent">
-                      <span>Вы</span>
-                      <p>«{planStep.phrase}»</p>
-                    </div>
-                  )}
-                  {planStep.questions?.map((q) => (
-                    <div className="scenario-turn parent" key={q}>
-                      <span>Вопрос</span>
-                      <p>{q}</p>
+            {planStep.action && (
+              <p className="step-instruction">{planStep.action}</p>
+            )}
+
+            {planStep.note && (
+              <div className="step-block">
+                <div className="step-block-label">Обратите внимание</div>
+                <p className="step-block-text">{planStep.note}</p>
+              </div>
+            )}
+
+            {planStep.mark && (
+              <div className="step-block">
+                <div className="step-block-label">Важно обозначить</div>
+                <div className="step-chip">{planStep.mark}</div>
+              </div>
+            )}
+
+            {say.length > 0 && (
+              <div className="step-block">
+                <div className="step-block-label">Можно сказать</div>
+                <div className="step-chip-stack">
+                  {say.map((p) => (
+                    <div className="step-chip" key={p}>
+                      «{p}»
                     </div>
                   ))}
-                  {primaryReaction && (
-                    <div className="scenario-exchange">
-                      <div className="scenario-turn child">
-                        <span>Ребёнок</span>
-                        <p>{primaryReaction.child}</p>
-                      </div>
-                      <div className="scenario-turn parent">
-                        <span>Можно ответить</span>
-                        <p>{primaryReaction.parent}</p>
-                      </div>
-                    </div>
-                  )}
-                  {showExtras &&
-                    extraReactions.map((r) => (
-                      <div className="scenario-exchange" key={`${r.child}-${r.parent}`}>
-                        <div className="scenario-turn child">
-                          <span>Ребёнок</span>
-                          <p>{r.child}</p>
-                        </div>
-                        <div className="scenario-turn parent">
-                          <span>Можно ответить</span>
-                          <p>{r.parent}</p>
-                        </div>
-                      </div>
-                    ))}
                 </div>
-                {extraReactions.length > 0 && (
-                  <button
-                    type="button"
-                    className="scenario-more"
-                    onClick={() =>
-                      setMoreReactions((prev) => ({ ...prev, [n]: !prev[n] }))
-                    }
-                  >
-                    {showExtras
-                      ? "Скрыть другие реакции"
-                      : `Другие возможные реакции · ${extraReactions.length}`}
-                  </button>
-                )}
               </div>
-            ) : (
-              planStep.action && <p className="step-instruction">{planStep.action}</p>
+            )}
+
+            {questions.length > 0 && (
+              <div className="step-block">
+                <div className="step-block-label">Можно спросить</div>
+                <div className="step-chip-stack">
+                  {questions.map((q) => (
+                    <div className="step-chip" key={q}>
+                      {q}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {primaryReaction && (
+              <div className="step-block">
+                <div className="step-block-label">
+                  {reactionTitle(primaryReaction.when)}
+                </div>
+                <div className="step-chip-stack">
+                  <div className="step-chip muted">{primaryReaction.child}</div>
+                </div>
+                <div className="step-block-label nest">Можно ответить</div>
+                <div className="step-chip">{primaryReaction.parent}</div>
+              </div>
+            )}
+
+            {showExtras &&
+              extraReactions.map((r) => (
+                <div className="step-block" key={`${r.child}-${r.parent}`}>
+                  <div className="step-block-label">{reactionTitle(r.when)}</div>
+                  <div className="step-chip muted">{r.child}</div>
+                  <div className="step-block-label nest">Можно ответить</div>
+                  <div className="step-chip">{r.parent}</div>
+                </div>
+              ))}
+
+            {extraReactions.length > 0 && (
+              <button
+                type="button"
+                className="scenario-more"
+                onClick={() =>
+                  setMoreReactions((prev) => ({ ...prev, [n]: !prev[n] }))
+                }
+              >
+                {showExtras
+                  ? "Скрыть другие реакции"
+                  : `Другие возможные реакции · ${extraReactions.length}`}
+              </button>
+            )}
+
+            {planStep.discuss && (
+              <div className="step-block">
+                <div className="step-block-label">Обсудите вместе</div>
+                <p className="step-block-text">{planStep.discuss}</p>
+              </div>
             )}
 
             {planStep.avoid && (
               <div className="avoid-line">
                 <span className="avoid-icon" aria-hidden="true">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M3.2 4.2h6.2c.7 0 1.2.6 1.1 1.3l-.5 3.2c-.1.7-.7 1.2-1.4 1.2H4.8c-.7 0-1.3-.5-1.4-1.2l-.5-3.2c-.1-.7.4-1.3 1.1-1.3Z"
+                    <circle
+                      cx="7"
+                      cy="7"
+                      r="5.2"
                       stroke="currentColor"
-                      strokeWidth="1.2"
+                      strokeWidth="1.3"
                     />
                     <path
-                      d="M5 4.1V3.4c0-.8.6-1.4 1.4-1.4h.8c.8 0 1.4.6 1.4 1.4v.7"
-                      stroke="currentColor"
-                      strokeWidth="1.2"
-                    />
-                    <path
-                      d="M2.2 11.8 11.8 2.2"
+                      d="M7 4.2v3.2"
                       stroke="currentColor"
                       strokeWidth="1.3"
                       strokeLinecap="round"
                     />
+                    <circle cx="7" cy="9.6" r="0.7" fill="currentColor" />
                   </svg>
                 </span>
                 <p>
-                  <b>Не стоит:</b> {planStep.avoid}
+                  <b>Лучше избегать:</b> {planStep.avoid}
                 </p>
               </div>
             )}
@@ -921,7 +953,9 @@ export default function Home() {
     const focusStep = total > 0 ? steps[focusIndex] : undefined;
     const tipPhrase =
       tryPhrase ||
-      (messages.length === 0 ? focusStep?.phrase || "" : "") ||
+      (messages.length === 0 && focusStep
+        ? stepPhrases(focusStep)[0] || ""
+        : "") ||
       "";
     const tipText = coachTip.trim();
     const avoid = focusStep?.avoid?.trim() || "";

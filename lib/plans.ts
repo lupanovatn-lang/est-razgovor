@@ -7,17 +7,35 @@ export type GoalKind =
   | "trust"
   | "other";
 
-export type ReactionPair = { child: string; parent: string };
+export type ReactionPair = {
+  /** Short condition after «Если ребёнок…», e.g. «молчит», «спорит» */
+  when?: string;
+  child: string;
+  parent: string;
+};
 
 export type PlanStep = {
   title: string;
   why: string;
+  /** Short how-to for the parent (shown as lead text) */
   action: string;
+  /** Legacy single phrase — prefer phrases[] */
   phrase?: string;
+  /** «Можно сказать» — one or more parent lines */
+  phrases?: string[];
+  /** «Можно спросить» */
   questions?: string[];
+  /** «Если ребёнок…» + «Можно ответить» */
   reactions?: ReactionPair[];
+  /** «Важно обозначить» — rule, decision, or boundary */
+  mark?: string;
+  /** «Обсудите вместе» — details, options, next step */
+  discuss?: string;
+  /** «Обратите внимание» — orientation for the parent */
+  note?: string;
+  /** «Лучше избегать» */
   avoid?: string;
-  /** «К чему прийти» — optional outcome of the step */
+  /** Optional outcome of the step */
   outcome?: string;
 };
 
@@ -34,12 +52,20 @@ export type ConversationPlan = {
 export const goalOptions: { id: GoalKind; label: string }[] = [
   { id: "understand", label: "Понять, почему ребёнок так поступил" },
   { id: "agree", label: "Договориться о правиле или изменении" },
-  { id: "boundary", label: "Обозначить границу" },
+  { id: "boundary", label: "Установить границу" },
   { id: "announce", label: "Сообщить ребёнку важное решение" },
   { id: "support", label: "Поддержать ребёнка" },
   { id: "trust", label: "Восстановить доверие после обмана или конфликта" },
   { id: "other", label: "Другое" },
 ];
+
+/** Collect sayable lines from a step (phrases[] or legacy phrase). */
+export function stepPhrases(step: PlanStep): string[] {
+  const fromList = (step.phrases || []).map((p) => p.trim()).filter(Boolean);
+  if (fromList.length) return fromList;
+  const one = step.phrase?.trim();
+  return one ? [one] : [];
+}
 
 export const goalLabel = (kind: GoalKind) =>
   goalOptions.find((g) => g.id === kind)?.label ?? "Другое";
@@ -213,6 +239,7 @@ function buildUnderstandPlan(ctx: BuildCtx): ConversationPlan {
           "Сейчас мне важнее понять, почему так вышло, а не сразу решать, что с этим делать.",
         reactions: [
           {
+            when: "говорит, что всё равно будут ругать",
             child: "Ты всё равно будешь ругать.",
             parent: "Сейчас я хочу услышать тебя. Решение — потом, когда разберёмся.",
           },
@@ -386,9 +413,11 @@ function buildBoundaryPlan(ctx: BuildCtx): ConversationPlan {
         avoid: "Долгие нотации и список всех прошлых провинностей.",
       },
       {
-        title: "Объясните границу и почему она вам нужна",
+        title: "Скажите границу и почему она вам нужна",
         why: "Причина делает границу понятной, даже если она неприятна.",
         action: "Скажите, что именно меняется и зачем — без торга об самой границе.",
+        mark: "Сама граница уже решена вами и не выносится на голосование.",
+        phrases: ["С этого момента будет так… Потому что…"],
         phrase: "С этого момента будет так… Потому что…",
         avoid: "«Давай вместе решим, нужна ли эта граница».",
       },
@@ -398,6 +427,7 @@ function buildBoundaryPlan(ctx: BuildCtx): ConversationPlan {
         action: "Выслушайте злость или грусть. Подтвердите чувства, границу оставьте.",
         reactions: [
           {
+            when: "спорит",
             child: "Это несправедливо!",
             parent: "Понимаю, что злишься. Решение остаётся. Можем обсудить, как сделать его чуть удобнее.",
           },
@@ -408,6 +438,7 @@ function buildBoundaryPlan(ctx: BuildCtx): ConversationPlan {
         title: "Предложите обсудить детали вместе",
         why: "Выбор в деталях снижает ощущение полной потери контроля.",
         action: "Предложите обсудить способ, время напоминания или формат исключения.",
+        discuss: "Время, способ напоминания и мелкие исключения — можно выбрать вместе.",
         questions: ["Как тебе удобнее соблюдать это?", "Какое маленькое исключение было бы уместно?"],
       },
       {
