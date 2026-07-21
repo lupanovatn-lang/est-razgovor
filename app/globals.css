@@ -668,7 +668,7 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   display: grid;
   grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   gap: 18px;
-  align-items: start;
+  align-items: stretch;
 }
 .plan-overview-card,
 .plan-focus-card {
@@ -677,11 +677,23 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   border-radius: 16px;
   background: rgba(255,255,255,.94);
 }
-.plan-detail { min-width: 0; }
+.plan-overview-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+.plan-detail {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 .plan-detail .plan-focus-card {
-  position: sticky;
-  top: 12px;
+  flex: 1;
+  position: static;
   padding: 20px 22px;
+  box-sizing: border-box;
 }
 .plan-overview-head {
   display: flex;
