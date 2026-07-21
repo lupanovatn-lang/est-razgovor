@@ -132,6 +132,8 @@ export default function Home() {
   const [statusIndex, setStatusIndex] = useState(0);
   const [waitTick, setWaitTick] = useState(0);
   const [formAttempted, setFormAttempted] = useState(false);
+  const [mobileParamsOpen, setMobileParamsOpen] = useState(false);
+  const planStartRef = useRef<HTMLElement | null>(null);
 
   const childName = age ? `${age} лет` : "ребёнок";
   const formValid = Boolean(
@@ -144,6 +146,20 @@ export default function Home() {
   useEffect(() => {
     setSavedList(loadSaved());
   }, []);
+
+  useEffect(() => {
+    if (view !== "plan" || !plan) return;
+    const frame = window.requestAnimationFrame(() => {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const behavior: ScrollBehavior = reduceMotion ? "auto" : "smooth";
+      const planStart = planStartRef.current;
+      const main = planStart?.closest("main");
+      main?.scrollTo({ top: 0, behavior });
+      planStart?.scrollIntoView({ behavior, block: "start" });
+      planStart?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [view, plan]);
 
   useEffect(() => {
     if (!generating) {
@@ -189,6 +205,7 @@ export default function Home() {
     setRehearseError("");
     setCopied(false);
     setFormAttempted(false);
+    setMobileParamsOpen(false);
     setView("compose");
   };
 
@@ -266,6 +283,7 @@ export default function Home() {
       setFormAttempted(false);
       setMoreReactions({});
       setCopied(false);
+      setMobileParamsOpen(false);
       if (activeId) {
         const savedGoal =
           nextPlan.goal || goalText || deriveSituationGoal(situation, goalKind, goalText);
@@ -330,6 +348,7 @@ export default function Home() {
     setPlanWarning("");
     setOpenPlanStep("");
     setMessages([]);
+    setMobileParamsOpen(false);
     setView("plan");
   };
 
@@ -407,6 +426,20 @@ export default function Home() {
     setShowCoachPhrase(false);
   };
 
+  const returnToPlan = () => {
+    setMobileParamsOpen(false);
+    setView("plan");
+  };
+
+  const openMobileSettings = () => {
+    setMobileParamsOpen(true);
+    window.setTimeout(() => {
+      const el = document.getElementById("situation");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+    }, 0);
+  };
+
   const sendReply = async (preset?: string) => {
     const parentText = (preset ?? reply).trim();
     if (!parentText || !plan || rehearseLoading) return;
@@ -458,8 +491,26 @@ export default function Home() {
   };
 
   function SettingsPanel() {
+    const collapsedOnMobile = view === "plan" && !!plan && !mobileParamsOpen;
     return (
-      <aside className={paramsLocked ? "settings-panel locked" : "settings-panel"}>
+      <aside
+        className={`${paramsLocked ? "settings-panel locked" : "settings-panel"}${
+          collapsedOnMobile ? " mobile-collapsed" : ""
+        }`}
+      >
+        {collapsedOnMobile && (
+          <button
+            type="button"
+            className="mobile-settings-summary"
+            onClick={openMobileSettings}
+          >
+            <span>
+              <b>Параметры разговора</b>
+              <small>{topic} · {age} лет</small>
+            </span>
+            <span>Изменить</span>
+          </button>
+        )}
         <div className="settings-scroll">
           <h2>Параметры разговора</h2>
           {!paramsLocked && (
@@ -705,15 +756,18 @@ export default function Home() {
 
     const focusSettings = () => {
       if (paramsLocked && !requestUnlockParams()) return;
-      const el = document.getElementById("situation");
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      el?.focus();
+      openMobileSettings();
     };
 
     return (
-      <section className="plan-wrap">
+      <section
+        ref={planStartRef}
+        className="plan-wrap"
+        tabIndex={-1}
+        aria-labelledby="plan-title"
+      >
         <header className="plan-header">
-          <h1>{plan.title}</h1>
+          <h1 id="plan-title">{plan.title}</h1>
           <div className="goal-badge">
             <span className="goal-badge-icon">
               <GoalIcon kind={goalKind || "other"} />
@@ -981,7 +1035,7 @@ export default function Home() {
               <button
                 type="button"
                 className="text-action chat-to-plan"
-                onClick={() => setView("plan")}
+                onClick={returnToPlan}
               >
                 К плану
               </button>
@@ -1200,15 +1254,18 @@ export default function Home() {
             type="button"
             className={view === "saved" ? "header-saved-btn open" : "header-saved-btn"}
             onClick={() => setView("saved")}
+            aria-label="Мои планы"
           >
-            Мои планы
+            <span className="desktop-label">Мои планы</span>
+            <span className="mobile-label">Планы</span>
             {savedList.length > 0 && (
               <span className="header-saved-count">{savedList.length}</span>
             )}
           </button>
-          <button type="button" className="header-new" onClick={resetNew}>
+          <button type="button" className="header-new" onClick={resetNew} aria-label="Новый план">
             <img src="/plus.svg" alt="" />
-            Новый план
+            <span className="desktop-label">Новый план</span>
+            <span className="mobile-label">Новый</span>
           </button>
         </div>
       </header>
