@@ -1,5 +1,10 @@
 import type { ConversationPlan, GoalKind, PlanStep } from "./plans";
-import { deriveSituationGoal, goalLabel, isGenericGoalText } from "./plans";
+import {
+  deriveSituationGoal,
+  goalLabel,
+  isGenericGoalText,
+  reactionWhenLabel,
+} from "./plans";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL =
@@ -134,7 +139,7 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
 Смысл полей шага (включай ТОЛЬКО нужные; остальные null / не дублируй пустым):
 - phrases — «Можно сказать»: 1–2 естественные фразы-варианты, не обязательный текст для заучивания;
 - questions — «Можно спросить»: без обвинения и без заранее заданного вывода; не в каждом шаге;
-- reactions — «Если ребёнок…» + «Можно ответить»: when — коротко («молчит», «спорит», «расстроился»); 0–2 шт., только где вероятно;
+- reactions — «Если ребёнок…» + «Можно ответить»: when и реплика ребёнка ОБЯЗАНЫ опираться на привычную реакцию из формы родителя (не подставляй «молчит» по умолчанию). when — коротко: «молчит», «спорит», «злится», «обвиняет», «расстраивается», «соглашается, но не делает». 0–2 шт., только где вероятно;
 - mark — «Важно обозначить»: правило, решение или граница;
 - discuss — «Обсудите вместе»: варианты, детали реализации, следующий шаг;
 - note — «Обратите внимание»: ориентир родителю;
@@ -145,7 +150,7 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
 Логика по целям (разная последовательность, не копируй одну на все):
 
 1) understand — сначала узнать, что произошло и почему. Не переходи к правилам, последствиям и решениям, пока позиция ребёнка не прояснена.
-   Типичные блоки: phrases, questions, reactions (молчит), avoid. Без mark-правила и без «наказания».
+   Типичные блоки: phrases, questions, reactions (под привычную реакцию родителя), avoid. Без mark-правила и без «наказания».
 
 2) agree — услышать → вместе найти вариант → правило + пробный период.
    Вопросы сначала про взгляд ребёнка, потом про варианты. mark/discuss уместны ближе к концу.
@@ -154,7 +159,7 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
    Нужны mark + phrases; не предлагай совместно выбирать, нужна ли граница.
 
 4) announce — спокойно сообщить уже принятое решение, объяснить, помочь с реакцией. Совместный поиск решения не обязателен.
-   phrases, note, reactions (расстроился). Без «давайте решим, делать ли это».
+   phrases, note, reactions под привычную реакцию. Без «давайте решим, делать ли это».
 
 5) support — быть рядом, выслушать, признать переживания, спросить какую помощь нужно.
    phrases, questions, note. Правило/договорённость могут отсутствовать. Не превращай в поиск решения конфликта.
@@ -170,16 +175,19 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
 - не обещай, что разговор пройдёт по сценарию; формулируй как варианты;
 - title — мягкое повелительное к родителю на «вы» («Начните…», «Спросите…»);
 - если есть questions — дай хотя бы одну phrase-открытие;
-- nonNegotiable / discussable / mark / финальная договорённость согласованы.`;
+- nonNegotiable / discussable / mark / финальная договорённость согласованы;
+- если в шаге есть reactions, первая пара должна соответствовать привычной реакции родителя из запроса.`;
 
 export function planUserPrompt(input: PlanRequest) {
   const customGoal = input.goalText.trim() && !isGenericGoalText(input.goalText);
+  const when = reactionWhenLabel(input.reaction);
   return `Тема: ${input.topic}
 Возраст ребёнка: ${input.age || "не указан"} лет
 Ситуация: ${input.situation}
 Тип цели (базовый): ${input.goalKind} (${goalLabel(input.goalKind)})
 Результат своими словами: ${customGoal ? input.goalText.trim() : "не указан — сформулируй goal сама по ситуации и типу цели"}
-Привычная реакция ребёнка: ${input.reaction}
+Привычная реакция ребёнка: ${input.reaction || "не указана"}
+${when ? `Для блоков reactions используй when «${when}» (и реплику ребёнка в этом ключе). Не заменяй на «молчит», если родитель выбрал другое.` : ""}
 
 Заголовок плана — по ситуации. Goal — конкретный результат.
 Структуру и набор блоков в steps строй строго под цель «${input.goalKind}».
@@ -264,8 +272,10 @@ export function normalizePlan(
     topic?: string;
     goalKind?: GoalKind;
     goalText?: string;
+    reaction?: string;
   },
 ): ConversationPlan {
+  const preferredWhen = reactionWhenLabel(ctx?.reaction || "");
   const steps = (raw.steps || [])
     .slice(0, 6)
     .map((s) => {
@@ -280,6 +290,23 @@ export function normalizePlan(
           : []),
       ];
 
+      let reactions =
+        Array.isArray(s.reactions) && s.reactions.length > 0
+          ? s.reactions.map((r) => ({
+              when: r.when ? String(r.when).trim() : undefined,
+              child: String(r.child),
+              parent: String(r.parent),
+            }))
+          : undefined;
+
+      if (reactions?.length && preferredWhen) {
+        // Primary «Если ребёнок…» must match the form's typical reaction.
+        reactions = [
+          { ...reactions[0], when: preferredWhen },
+          ...reactions.slice(1),
+        ];
+      }
+
       return repairStepDialogue({
         title: String(s.title || "").trim(),
         why: String(s.why || "").trim(),
@@ -290,14 +317,7 @@ export function normalizePlan(
           Array.isArray(s.questions) && s.questions.length > 0
             ? s.questions.map(String)
             : undefined,
-        reactions:
-          Array.isArray(s.reactions) && s.reactions.length > 0
-            ? s.reactions.map((r) => ({
-                when: r.when ? String(r.when).trim() : undefined,
-                child: String(r.child),
-                parent: String(r.parent),
-              }))
-            : undefined,
+        reactions,
         mark: (s as PlanStep).mark
           ? String((s as PlanStep).mark).trim()
           : undefined,

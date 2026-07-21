@@ -50,6 +50,7 @@ export async function POST(request: Request) {
       topic: input.topic,
       goalKind: input.goalKind,
       goalText: input.goalText,
+      reaction: input.reaction,
     });
     if (plan.steps.length < 3) {
       return Response.json({

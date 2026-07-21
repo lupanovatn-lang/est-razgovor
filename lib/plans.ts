@@ -67,6 +67,19 @@ export function stepPhrases(step: PlanStep): string[] {
   return one ? [one] : [];
 }
 
+/** Short «Если ребёнок …» label from the form's typical reaction. */
+export function reactionWhenLabel(reaction: string): string {
+  const r = reaction.trim().toLowerCase();
+  if (!r) return "";
+  if (/молч|замкн/.test(r)) return "молчит";
+  if (/спор|защищ/.test(r)) return "спорит";
+  if (/злит/.test(r)) return "злится";
+  if (/обвиня/.test(r)) return "обвиняет";
+  if (/расстра/.test(r)) return "расстраивается";
+  if (/соглаша/.test(r)) return "соглашается, но не делает";
+  return reaction.trim().replace(/^если\s+ребёнок\s+/i, "");
+}
+
 export const goalLabel = (kind: GoalKind) =>
   goalOptions.find((g) => g.id === kind)?.label ?? "Другое";
 

@@ -154,6 +154,7 @@ async function main() {
       topic: c.topic,
       goalKind: c.goalKind,
       goalText: c.goalText,
+      reaction: c.reaction,
     });
     const { verdict, issues } = dialogueScore(c.id, plan.steps || []);
     const row = {
