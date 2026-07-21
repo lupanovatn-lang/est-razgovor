@@ -123,6 +123,7 @@ export default function Home() {
   const [formAttempted, setFormAttempted] = useState(false);
   const [mobileParamsOpen, setMobileParamsOpen] = useState(false);
   const planStartRef = useRef<HTMLElement | null>(null);
+  const planBottomRef = useRef<HTMLDivElement | null>(null);
 
   const childName = age ? `${age} лет` : "ребёнок";
   const formValid = Boolean(
@@ -819,12 +820,18 @@ export default function Home() {
                 step={activeStep}
                 onPrev={() => goTo(activeIndex - 1)}
                 onNext={() => goTo(activeIndex + 1)}
+                onFinish={() => {
+                  planBottomRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                }}
               />
             )}
           </div>
         </div>
 
-        <div className="plan-bottom-actions">
+        <div className="plan-bottom-actions" ref={planBottomRef}>
           {!openedFromLibrary && (
             <button type="button" className="text-action" onClick={focusSettings}>
               Изменить запрос
@@ -863,6 +870,7 @@ export default function Home() {
     step: planStep,
     onPrev,
     onNext,
+    onFinish,
   }: {
     n: string;
     index: number;
@@ -870,7 +878,9 @@ export default function Home() {
     step: PlanStep;
     onPrev: () => void;
     onNext: () => void;
+    onFinish: () => void;
   }) {
+    const isLast = index >= total - 1;
     const say = stepPhrases(planStep);
     const primaryPhrase = say[0];
     const extraPhrases = say.slice(1);
@@ -1016,7 +1026,7 @@ export default function Home() {
       <section className="plan-focus-card" aria-label={`Шаг ${index + 1}`}>
         <div className="plan-focus-top">
           <div className="plan-card-kicker">
-            Шаг {index + 1} из {total}
+            {isLast ? "Последний шаг" : `Шаг ${index + 1} из ${total}`}
           </div>
           <div className="plan-focus-nav">
             <button
@@ -1027,14 +1037,19 @@ export default function Home() {
             >
               Назад
             </button>
-            <button
-              type="button"
-              className="plan-nav-btn"
-              onClick={onNext}
-              disabled={index >= total - 1}
-            >
-              Дальше
-            </button>
+            {isLast ? (
+              <button
+                type="button"
+                className="plan-nav-btn plan-nav-btn-finish"
+                onClick={onFinish}
+              >
+                Готово
+              </button>
+            ) : (
+              <button type="button" className="plan-nav-btn" onClick={onNext}>
+                Дальше
+              </button>
+            )}
           </div>
         </div>
 
@@ -1086,6 +1101,12 @@ export default function Home() {
             <div className="step-tip-panel" role="tabpanel">
               {activeTab.render()}
             </div>
+          )}
+
+          {isLast && (
+            <p className="plan-finish-note">
+              План прочитан. Можно сохранить или скопировать — кнопки ниже.
+            </p>
           )}
         </div>
       </section>

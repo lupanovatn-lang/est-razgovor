@@ -786,6 +786,22 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 }
 .plan-nav-btn:hover:not(:disabled) { background: #f5f6fb; color: #3f435a; }
 .plan-nav-btn:disabled { opacity: .4; cursor: default; }
+.plan-nav-btn-finish {
+  border-color: #c8c4f5;
+  background: #eceafc;
+  color: #4f45c9;
+}
+.plan-nav-btn-finish:hover {
+  background: #e4e0ff;
+  color: #4338ca;
+}
+.plan-finish-note {
+  margin: 4px 0 0;
+  max-width: 42ch;
+  color: #6d718a;
+  font-size: 14px;
+  line-height: 1.45;
+}
 .plan-focus-body {
   display: flex;
   flex-direction: column;
