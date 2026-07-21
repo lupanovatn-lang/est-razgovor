@@ -397,6 +397,7 @@ export default function Home() {
     plan?.steps.map(stepPhrases).find((p) => p.length)?.[0] ||
     "Я хочу спокойно поговорить. Мне важно услышать тебя.";
 
+  // Paused in UI — product copy + restore steps: product-notes/rehearsal-paused.md
   const startRehearsal = () => {
     if (!plan) return;
     setView("rehearsal");
@@ -853,20 +854,6 @@ export default function Home() {
             </span>
           )}
         </div>
-
-        <aside className="rehearse-invite">
-          <div className="rehearse-invite-copy">
-            <h2>Потренировать</h2>
-            <p>Короткая репетиция первых фраз — чтобы не идти в разговор «в холодную».</p>
-          </div>
-          <button
-            type="button"
-            className="rehearse-button"
-            onClick={startRehearsal}
-          >
-            Начать
-          </button>
-        </aside>
       </section>
     );
   }
@@ -1399,13 +1386,13 @@ export default function Home() {
         {showSettings && SettingsPanel()}
         <section className="workspace">
           <main>
-            {view === "rehearsal"
-              ? Rehearsal()
-              : view === "saved"
-                ? SavedPlansView()
-                : generating
-                  ? GeneratingState()
-                  : view === "plan" && plan
+            {view === "saved"
+              ? SavedPlansView()
+              : generating
+                ? GeneratingState()
+                : view === "plan" && plan
+                  ? PlanView()
+                  : view === "rehearsal" && plan
                     ? PlanView()
                     : EmptyState()}
           </main>
