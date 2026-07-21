@@ -137,11 +137,7 @@ export default function Home() {
 
   const childName = age ? `${age} лет` : "ребёнок";
   const formValid = Boolean(
-    topic.trim() &&
-      situation.trim() &&
-      goalKind &&
-      age.trim() &&
-      reaction.trim(),
+    topic.trim() && situation.trim() && goalKind && age.trim(),
   );
   useEffect(() => {
     setSavedList(loadSaved());
@@ -242,9 +238,7 @@ export default function Home() {
             ? "goalKind"
             : !age.trim()
               ? "age"
-              : !reaction.trim()
-                ? "reaction"
-                : null;
+              : null;
       if (missing) {
         window.setTimeout(() => {
           document.getElementById(missing)?.focus();
@@ -632,18 +626,15 @@ export default function Home() {
           </div>
 
           <label className="field-label" htmlFor="reaction">
-            Как обычно реагирует <span className="field-req">*</span>
+            Как обычно реагирует на серьёзные разговоры?
           </label>
           <div className="select-wrap">
             <select
               id="reaction"
               value={reaction}
-              required
               onChange={(e) => setReaction(e.target.value)}
             >
-              <option value="" disabled>
-                Выберите реакцию
-              </option>
+              <option value="">Не указано</option>
               {reactions.map((r) => (
                 <option key={r} value={r}>
                   {r}
@@ -788,25 +779,19 @@ export default function Home() {
       >
         <header className="plan-header">
           <h1 id="plan-title">{plan.title}</h1>
-          <div className="goal-badge">
-            <span className="goal-badge-icon">
+          <div className="plan-goal-chip">
+            <span className="plan-goal-chip-icon" aria-hidden="true">
               <GoalIcon kind={goalKind || "other"} />
             </span>
-            <span>
-              <span className="goal-badge-label">Цель разговора</span>
-              {resolvedGoal}
-            </span>
+            <span>{goalKind ? goalLabel(goalKind) : "Цель разговора"}</span>
           </div>
-          <p className="plan-howto">
-            Сначала посмотрите общий план, затем откройте шаг — там фраза, которую можно сказать.
-          </p>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 
-        <div className="plan-cards">
+        <div className="plan-split">
           <section className="plan-overview-card" aria-label="Общий план">
-            <div className="plan-card-kicker">Общий план</div>
-            <h2 className="plan-card-title">Что делать по шагам</h2>
+            <div className="plan-card-kicker">План</div>
+            <h2 className="plan-card-title">Шаги разговора</h2>
             <ol className="plan-overview-list">
               {steps.map((s, i) => {
                 const selected = i === activeIndex;
@@ -831,17 +816,19 @@ export default function Home() {
             </ol>
           </section>
 
-          {activeStep && (
-            <StepFocusCard
-              key={activeN}
-              n={activeN}
-              index={activeIndex}
-              total={total}
-              step={activeStep}
-              onPrev={() => goTo(activeIndex - 1)}
-              onNext={() => goTo(activeIndex + 1)}
-            />
-          )}
+          <div className="plan-detail">
+            {activeStep && (
+              <StepFocusCard
+                key={activeN}
+                n={activeN}
+                index={activeIndex}
+                total={total}
+                step={activeStep}
+                onPrev={() => goTo(activeIndex - 1)}
+                onNext={() => goTo(activeIndex + 1)}
+              />
+            )}
+          </div>
         </div>
 
         <div className="plan-bottom-actions">
@@ -935,7 +922,7 @@ export default function Home() {
     };
 
     const tipTabs: TipTab[] = [];
-    if (reactionsList.length > 0) {
+    if (reactionsList.length > 0 && reaction.trim()) {
       tipTabs.push({
         id: "reaction",
         label: "Если ответит",
@@ -1361,7 +1348,10 @@ export default function Home() {
     );
   }
 
-  const showSettings = view !== "rehearsal" && view !== "saved";
+  const showSettings =
+    view !== "rehearsal" &&
+    view !== "saved" &&
+    !(view === "plan" && plan && !mobileParamsOpen);
 
   return (
     <div className={showSettings ? "app-shell" : "app-shell rehearsal-mode"}>
