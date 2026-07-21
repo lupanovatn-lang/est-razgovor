@@ -494,6 +494,34 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 }
 .scenario-more { margin: 0; padding: 0; border: 0; background: none; color: #6257e9; font-size: 12px; font-weight: 600; cursor: pointer; text-align: left; }
 .scenario-more:hover { color: #4e43da; }
+.step-tip-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 480px;
+}
+.step-tip-tab {
+  border: 1px solid #dfe1ee;
+  border-radius: 999px;
+  background: #fff;
+  padding: 6px 11px;
+  color: #5a5e76;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.step-tip-tab:hover { background: #f4f5fb; color: #3f435a; }
+.step-tip-tab.active {
+  border-color: #c8c4f5;
+  background: #eceafc;
+  color: #4f45c9;
+}
+.step-tip-panel {
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .avoid-line {
   display: flex;
   align-items: flex-start;

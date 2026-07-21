@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   deriveSituationGoal,
   goalLabel,
@@ -120,7 +120,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number | null>(null);
   const [openPlanStep, setOpenPlanStep] = useState("");
-  const [stepMore, setStepMore] = useState<Record<string, boolean>>({});
+  const [stepTab, setStepTab] = useState<Record<string, string>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [coachTip, setCoachTip] = useState("");
@@ -196,7 +196,7 @@ export default function Home() {
     setPlanWarning("");
     setPlanError("");
     setOpenPlanStep("");
-    setStepMore({});
+    setStepTab({});
     setMessages([]);
     setReply("");
     setCoachTip("");
@@ -281,7 +281,7 @@ export default function Home() {
       }
       setOpenPlanStep("01");
       setFormAttempted(false);
-      setStepMore({});
+      setStepTab({});
       setCopied(false);
       setMobileParamsOpen(false);
       if (activeId) {
@@ -347,7 +347,7 @@ export default function Home() {
     setPlanSource("openai");
     setPlanWarning("");
     setOpenPlanStep("01");
-    setStepMore({});
+    setStepTab({});
     setMessages([]);
     setMobileParamsOpen(false);
     setView("plan");
@@ -848,7 +848,6 @@ export default function Home() {
     step: PlanStep;
   }) {
     const open = openPlanStep === n;
-    const showMore = !!stepMore[n];
     const say = stepPhrases(planStep);
     const primaryPhrase = say[0];
     const extraPhrases = say.slice(1);
@@ -856,18 +855,12 @@ export default function Home() {
     const primaryQuestion = questions[0];
     const extraQuestions = questions.slice(1);
     const reactionsList = planStep.reactions ?? [];
-    const primaryReaction = reactionsList[0];
-    const extraReactions = reactionsList.slice(1);
 
-    const hasMore =
-      extraPhrases.length > 0 ||
-      extraQuestions.length > 0 ||
-      !!planStep.note ||
-      !!planStep.mark ||
-      !!planStep.discuss ||
-      !!planStep.avoid ||
-      reactionsList.length > 0 ||
-      (questions.length > 1);
+    type TipTab = {
+      id: string;
+      label: string;
+      render: () => ReactNode;
+    };
 
     const reactionTitle = (when?: string) =>
       when?.trim()
@@ -884,6 +877,118 @@ export default function Home() {
       return true;
     };
 
+    const tipTabs: TipTab[] = [];
+    if (reactionsList.length > 0) {
+      tipTabs.push({
+        id: "reaction",
+        label: "Если ответит",
+        render: () => (
+          <>
+            {reactionsList.map((r) => (
+              <div className="step-block" key={`${r.when}-${r.child}-${r.parent}`}>
+                <div className="step-block-label">{reactionTitle(r.when)}</div>
+                {showChildLine(r.child) && (
+                  <div className="step-chip muted">{r.child}</div>
+                )}
+                {r.parent?.trim() && (
+                  <>
+                    <div className="step-block-label nest">Можно ответить</div>
+                    <div className="step-chip">{r.parent}</div>
+                  </>
+                )}
+              </div>
+            ))}
+          </>
+        ),
+      });
+    }
+    if (planStep.mark) {
+      tipTabs.push({
+        id: "mark",
+        label: "Важно",
+        render: () => (
+          <div className="step-block">
+            <div className="step-block-label">Важно обозначить</div>
+            <div className="step-chip">{planStep.mark}</div>
+          </div>
+        ),
+      });
+    }
+    if (planStep.discuss) {
+      tipTabs.push({
+        id: "discuss",
+        label: "Вместе",
+        render: () => (
+          <div className="step-block">
+            <div className="step-block-label">Обсудите вместе</div>
+            <p className="step-block-text">{planStep.discuss}</p>
+          </div>
+        ),
+      });
+    }
+    if (planStep.note) {
+      tipTabs.push({
+        id: "note",
+        label: "Заметка",
+        render: () => (
+          <div className="step-block">
+            <div className="step-block-label">Обратите внимание</div>
+            <p className="step-block-text">{planStep.note}</p>
+          </div>
+        ),
+      });
+    }
+    if (extraPhrases.length > 0 || extraQuestions.length > 0) {
+      tipTabs.push({
+        id: "extra",
+        label: "Ещё фразы",
+        render: () => (
+          <div className="step-chip-stack">
+            {extraPhrases.map((p) => (
+              <div className="step-chip" key={p}>
+                «{p}»
+              </div>
+            ))}
+            {extraQuestions.map((q) => (
+              <div className="step-chip" key={q}>
+                {q}
+              </div>
+            ))}
+          </div>
+        ),
+      });
+    }
+    if (planStep.avoid) {
+      tipTabs.push({
+        id: "avoid",
+        label: "Не стоит",
+        render: () => (
+          <div className="avoid-line">
+            <span className="avoid-icon" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5.2" stroke="currentColor" strokeWidth="1.3" />
+                <path
+                  d="M7 4.2v3.2"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                  strokeLinecap="round"
+                />
+                <circle cx="7" cy="9.6" r="0.7" fill="currentColor" />
+              </svg>
+            </span>
+            <p>
+              <b>Лучше избегать:</b> {planStep.avoid}
+            </p>
+          </div>
+        ),
+      });
+    }
+
+    const activeTabId = tipTabs.some((t) => t.id === stepTab[n])
+      ? stepTab[n]
+      : "";
+    const activeTab = tipTabs.find((t) => t.id === activeTabId);
+
     return (
       <article className={open ? "plan-step open" : "plan-step"}>
         <button
@@ -891,7 +996,13 @@ export default function Home() {
           aria-expanded={open}
           onClick={() => {
             setOpenPlanStep(open ? "" : n);
-            if (open) setStepMore((prev) => ({ ...prev, [n]: false }));
+            if (open) {
+              setStepTab((prev) => {
+                const next = { ...prev };
+                delete next[n];
+                return next;
+              });
+            }
           }}
         >
           <span className="plan-number">{Number(n)}</span>
@@ -923,111 +1034,35 @@ export default function Home() {
               </div>
             )}
 
-            {hasMore && (
-              <button
-                type="button"
-                className="scenario-more"
-                onClick={() =>
-                  setStepMore((prev) => ({ ...prev, [n]: !prev[n] }))
-                }
-              >
-                {showMore ? "Скрыть подробности" : "Ещё подсказки"}
-              </button>
+            {tipTabs.length > 0 && (
+              <div className="step-tip-tabs" role="tablist" aria-label="Дополнительные подсказки">
+                {tipTabs.map((tab) => {
+                  const selected = activeTabId === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      className={selected ? "step-tip-tab active" : "step-tip-tab"}
+                      onClick={() =>
+                        setStepTab((prev) => ({
+                          ...prev,
+                          [n]: selected ? "" : tab.id,
+                        }))
+                      }
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
             )}
 
-            {showMore && (
-              <>
-                {planStep.note && (
-                  <div className="step-block">
-                    <div className="step-block-label">Обратите внимание</div>
-                    <p className="step-block-text">{planStep.note}</p>
-                  </div>
-                )}
-
-                {planStep.mark && (
-                  <div className="step-block">
-                    <div className="step-block-label">Важно обозначить</div>
-                    <div className="step-chip">{planStep.mark}</div>
-                  </div>
-                )}
-
-                {extraPhrases.map((p) => (
-                  <div className="step-chip" key={p}>
-                    «{p}»
-                  </div>
-                ))}
-
-                {extraQuestions.map((q) => (
-                  <div className="step-chip" key={q}>
-                    {q}
-                  </div>
-                ))}
-
-                {primaryReaction && (
-                  <div className="step-block">
-                    <div className="step-block-label">
-                      {reactionTitle(primaryReaction.when)}
-                    </div>
-                    {showChildLine(primaryReaction.child) && (
-                      <div className="step-chip muted">{primaryReaction.child}</div>
-                    )}
-                    {primaryReaction.parent?.trim() && (
-                      <>
-                        <div className="step-block-label nest">Можно ответить</div>
-                        <div className="step-chip">{primaryReaction.parent}</div>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {extraReactions.map((r) => (
-                  <div className="step-block" key={`${r.child}-${r.parent}`}>
-                    <div className="step-block-label">{reactionTitle(r.when)}</div>
-                    {showChildLine(r.child) && (
-                      <div className="step-chip muted">{r.child}</div>
-                    )}
-                    {r.parent?.trim() && (
-                      <>
-                        <div className="step-block-label nest">Можно ответить</div>
-                        <div className="step-chip">{r.parent}</div>
-                      </>
-                    )}
-                  </div>
-                ))}
-
-                {planStep.discuss && (
-                  <div className="step-block">
-                    <div className="step-block-label">Обсудите вместе</div>
-                    <p className="step-block-text">{planStep.discuss}</p>
-                  </div>
-                )}
-
-                {planStep.avoid && (
-                  <div className="avoid-line">
-                    <span className="avoid-icon" aria-hidden="true">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <circle
-                          cx="7"
-                          cy="7"
-                          r="5.2"
-                          stroke="currentColor"
-                          strokeWidth="1.3"
-                        />
-                        <path
-                          d="M7 4.2v3.2"
-                          stroke="currentColor"
-                          strokeWidth="1.3"
-                          strokeLinecap="round"
-                        />
-                        <circle cx="7" cy="9.6" r="0.7" fill="currentColor" />
-                      </svg>
-                    </span>
-                    <p>
-                      <b>Лучше избегать:</b> {planStep.avoid}
-                    </p>
-                  </div>
-                )}
-              </>
+            {activeTab && (
+              <div className="step-tip-panel" role="tabpanel">
+                {activeTab.render()}
+              </div>
             )}
           </div>
         )}
