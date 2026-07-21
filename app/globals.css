@@ -648,17 +648,13 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 }
 .plan-header p { margin: 0; color: #80849f; font-size: 14px; }
 .plan-goal {
-  margin: 10px 0 0;
-  max-width: 48ch;
-  color: #2f3248;
-  font-size: 17px;
-  font-weight: 550;
+  margin: 8px 0 0;
+  max-width: 40ch;
+  color: #5a5e76;
+  font-size: 16px;
+  font-weight: 500;
   line-height: 1.4;
   letter-spacing: -.01em;
-}
-.plan-goal-prefix {
-  color: #6257e9;
-  font-weight: 650;
 }
 .plan-split {
   display: grid;

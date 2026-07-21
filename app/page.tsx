@@ -770,10 +770,11 @@ export default function Home() {
       >
         <header className="plan-header">
           <h1 id="plan-title">{plan.title}</h1>
-          <p className="plan-goal">
-            <span className="plan-goal-prefix">Цель:</span>{" "}
-            {goalKind ? goalLabel(goalKind) : "не указана"}
-          </p>
+          {(goalKind || plan.goal) && (
+            <p className="plan-goal">
+              {goalKind ? goalLabel(goalKind) : plan.goal}
+            </p>
+          )}
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 
