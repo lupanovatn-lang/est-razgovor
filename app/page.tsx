@@ -123,7 +123,6 @@ export default function Home() {
   const [formAttempted, setFormAttempted] = useState(false);
   const [mobileParamsOpen, setMobileParamsOpen] = useState(false);
   const planStartRef = useRef<HTMLElement | null>(null);
-  const planBottomRef = useRef<HTMLDivElement | null>(null);
 
   const childName = age ? `${age} лет` : "ребёнок";
   const formValid = Boolean(
@@ -821,18 +820,12 @@ export default function Home() {
                 step={activeStep}
                 onPrev={() => goTo(activeIndex - 1)}
                 onNext={() => goTo(activeIndex + 1)}
-                onFinish={() => {
-                  planBottomRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                  });
-                }}
               />
             )}
           </div>
         </div>
 
-        <div className="plan-bottom-actions" ref={planBottomRef}>
+        <div className="plan-bottom-actions">
           {!openedFromLibrary && (
             <button type="button" className="text-action" onClick={focusSettings}>
               Изменить запрос
@@ -871,7 +864,6 @@ export default function Home() {
     step: planStep,
     onPrev,
     onNext,
-    onFinish,
   }: {
     n: string;
     index: number;
@@ -879,7 +871,6 @@ export default function Home() {
     step: PlanStep;
     onPrev: () => void;
     onNext: () => void;
-    onFinish: () => void;
   }) {
     const isLast = index >= total - 1;
     const say = stepPhrases(planStep);
@@ -1039,13 +1030,9 @@ export default function Home() {
               Назад
             </button>
             {isLast ? (
-              <button
-                type="button"
-                className="plan-nav-btn plan-nav-btn-finish"
-                onClick={onFinish}
-              >
+              <span className="plan-nav-done" aria-hidden="true">
                 Готово
-              </button>
+              </span>
             ) : (
               <button type="button" className="plan-nav-btn" onClick={onNext}>
                 Дальше
@@ -1105,9 +1092,12 @@ export default function Home() {
           )}
 
           {isLast && (
-            <p className="plan-finish-note">
-              План прочитан. Можно сохранить или скопировать — кнопки ниже.
-            </p>
+            <div className="plan-finish">
+              <span className="plan-finish-status">
+                <DoneCheck />
+                План готов
+              </span>
+            </div>
           )}
         </div>
       </section>
