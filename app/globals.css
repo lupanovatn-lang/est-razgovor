@@ -495,26 +495,26 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .boundary-split > div { padding: 16px 18px; border-radius: 14px; border: 1px solid #e0e2ee; background: rgba(255,255,255,.88); }
 .boundary-split span { display: block; margin-bottom: 8px; color: #6b62e8; font-size: 11px; font-weight: 650; }
 .boundary-split p { margin: 0; color: #3f435a; font-size: 12px; line-height: 1.55; }
-.step-instruction { margin: 0; max-width: 58ch; color: #5a5e76; font-size: 15px; line-height: 1.5; }
-.step-outcome { margin: 0; max-width: 58ch; color: #6d718a; font-size: 14px; line-height: 1.45; }
-.step-block { display: flex; flex-direction: column; gap: 9px; max-width: 560px; }
+.step-instruction { margin: 0; max-width: 62ch; color: #5a5e76; font-size: 16px; line-height: 1.5; }
+.step-outcome { margin: 0; max-width: 62ch; color: #6d718a; font-size: 15px; line-height: 1.45; }
+.step-block { display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
 .step-block-label {
   color: #3f435a;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 650;
   letter-spacing: -.01em;
 }
 .step-block-label.nest { margin-top: 4px; }
-.step-block-text { margin: 0; color: #5a5e76; font-size: 15px; line-height: 1.5; }
-.step-chip-stack { display: flex; flex-direction: column; gap: 8px; }
+.step-block-text { margin: 0; color: #5a5e76; font-size: 16px; line-height: 1.5; }
+.step-chip-stack { display: flex; flex-direction: column; gap: 10px; }
 .step-chip {
   width: fit-content;
   max-width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
   background: #eef0f8;
   color: #34374f;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.45;
 }
 .step-chip.muted {
@@ -528,15 +528,15 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  max-width: 560px;
+  max-width: 640px;
 }
 .step-tip-tab {
   border: 1px solid #dfe1ee;
   border-radius: 999px;
   background: #fff;
-  padding: 8px 13px;
+  padding: 9px 14px;
   color: #5a5e76;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -547,24 +547,24 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   color: #4f45c9;
 }
 .step-tip-panel {
-  max-width: 560px;
+  max-width: 640px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 .avoid-line {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  max-width: 560px;
-  padding: 10px 12px;
+  max-width: 640px;
+  padding: 12px 14px;
   border-radius: 0 8px 8px 0;
   border-left: 2px solid #b8bcd4;
   background: transparent;
   color: #4a4e63;
 }
 .avoid-icon { flex: 0 0 auto; margin-top: 1px; color: #7d8199; display: grid; place-items: center; }
-.avoid-line p { margin: 0; font-size: 14px; line-height: 1.45; }
+.avoid-line p { margin: 0; font-size: 15px; line-height: 1.45; }
 .avoid-line b { font-weight: 650; color: #3f435a; }
 .plan-step-body { margin: 0 30px 18px 92px; padding: 0; display: flex; flex-direction: column; gap: 14px; background: transparent; color: #4f536d; }
 .plan-step-body p { margin: 0; font-size: 13px; line-height: 1.5; }
@@ -584,7 +584,7 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .privacy { margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 5px; color: #999cb1; font-size: 9px; }
 .privacy img { width: 12px; height: 12px; opacity: .8; }
 
-.plan-wrap { width: min(1160px, 100%); margin: 0 auto; }
+.plan-wrap { width: min(1240px, 100%); margin: 0 auto; }
 .plan-wrap:focus { outline: none; }
 .plan-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; margin-bottom: 24px; }
 .plan-top > div:first-child { max-width: 610px; }
@@ -656,15 +656,16 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 }
 .plan-split {
   display: grid;
-  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
-  gap: 18px;
+  grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+  gap: 20px;
   align-items: stretch;
+  min-height: min(58vh, 580px);
 }
 .plan-overview-card,
 .plan-focus-card {
-  padding: 18px;
+  padding: 22px;
   border: 1px solid #e1e3ef;
-  border-radius: 16px;
+  border-radius: 18px;
   background: rgba(255,255,255,.94);
 }
 .plan-overview-card {
@@ -682,7 +683,7 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-detail .plan-focus-card {
   flex: 1;
   position: static;
-  padding: 20px 22px;
+  padding: 24px 26px;
   box-sizing: border-box;
 }
 .plan-overview-head {
@@ -690,18 +691,18 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   padding: 0 2px;
 }
 .plan-overview-count {
   color: #8b8fa8;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 .plan-card-kicker {
   margin-bottom: 0;
   color: #7a76c9;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
@@ -720,17 +721,17 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 .plan-overview-item {
   width: 100%;
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-columns: 36px minmax(0, 1fr);
   align-items: start;
-  gap: 10px;
-  padding: 11px 10px;
+  gap: 12px;
+  padding: 14px 12px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 14px;
   background: transparent;
   text-align: left;
   cursor: pointer;
@@ -741,21 +742,21 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   background: #f1f0fc;
 }
 .plan-overview-num {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   border-radius: 50%;
   background: #f0effd;
   color: #6257e9;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 650;
 }
 .plan-overview-item.active .plan-overview-num { background: #e4e0ff; }
 .plan-overview-text {
-  padding-top: 5px;
+  padding-top: 6px;
   color: #2f3248;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -764,16 +765,16 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .plan-focus-nav { display: flex; gap: 8px; flex-shrink: 0; }
 .plan-nav-btn {
   border: 1px solid #dfe1ee;
   border-radius: 10px;
   background: #fff;
-  padding: 8px 12px;
+  padding: 9px 14px;
   color: #5a5e76;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -782,8 +783,8 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-focus-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 6px;
+  gap: 18px;
+  margin-top: 8px;
 }
 .plan-back { padding: 0; border: 0; background: transparent; color: #6b63d9; font-size: 11px; cursor: pointer; }
 .plan-header .plan-actions { display: none; }
