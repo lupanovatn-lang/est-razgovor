@@ -770,7 +770,7 @@ export default function Home() {
         <header className="plan-header">
           <h1 id="plan-title">{plan.title}</h1>
           <div className="plan-goal">
-            <span className="plan-goal-label">Цель разговора</span>
+            <span className="plan-card-kicker">Цель разговора</span>
             <p className="plan-goal-text">
               {goalKind ? goalLabel(goalKind) : "Цель разговора"}
             </p>
