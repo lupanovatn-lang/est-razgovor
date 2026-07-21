@@ -1101,15 +1101,6 @@ export default function Home() {
               {activeTab.render()}
             </div>
           )}
-
-          {isLast && (
-            <div className="plan-finish">
-              <span className="plan-finish-status">
-                <DoneCheck />
-                План готов
-              </span>
-            </div>
-          )}
         </div>
       </section>
     );
