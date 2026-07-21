@@ -769,12 +769,10 @@ export default function Home() {
       >
         <header className="plan-header">
           <h1 id="plan-title">{plan.title}</h1>
-          <div className="plan-goal">
-            <span className="plan-card-kicker">Цель разговора</span>
-            <p className="plan-goal-text">
-              {goalKind ? goalLabel(goalKind) : "Цель разговора"}
-            </p>
-          </div>
+          <p className="plan-goal">
+            <span className="plan-goal-prefix">Цель:</span>{" "}
+            {goalKind ? goalLabel(goalKind) : "не указана"}
+          </p>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 

@@ -344,14 +344,30 @@ button { color: inherit; }
   letter-spacing: .06em;
   text-transform: uppercase;
 }
-.plan-bottom-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 22px; }
-.text-action { border: 0; background: transparent; padding: 8px 4px; color: #6257e9; font-size: 14px; font-weight: 600; cursor: pointer; }
-.text-action:hover { color: #4e43da; }
+.plan-bottom-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 22px; }
+.text-action {
+  border: 1px solid #e0e2ef;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 14px;
+  color: #4a4e63;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.text-action:hover {
+  border-color: #c8c4f5;
+  background: #f7f6ff;
+  color: #5045ce;
+}
 .plan-done-mark {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 4px;
+  padding: 10px 14px;
+  border: 1px solid #d5ebe0;
+  border-radius: 10px;
+  background: #f3faf6;
   color: #3a8c75;
   font-size: 14px;
   font-weight: 650;
@@ -529,10 +545,13 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   flex-wrap: wrap;
   gap: 8px;
   max-width: 640px;
+  margin-top: 2px;
+  padding-top: 14px;
+  border-top: 1px solid #e8eaf3;
 }
 .step-tip-tab {
   border: 1px solid #dfe1ee;
-  border-radius: 999px;
+  border-radius: 10px;
   background: #fff;
   padding: 9px 14px;
   color: #5a5e76;
@@ -632,20 +651,17 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 }
 .plan-header p { margin: 0; color: #80849f; font-size: 14px; }
 .plan-goal {
-  margin: 12px 0 0;
-  max-width: 44ch;
+  margin: 10px 0 0;
+  max-width: 48ch;
+  color: #2f3248;
+  font-size: 17px;
+  font-weight: 550;
+  line-height: 1.4;
+  letter-spacing: -.01em;
 }
-.plan-goal .plan-card-kicker {
-  display: block;
-  margin-bottom: 6px;
-}
-.plan-goal-text {
-  margin: 0;
-  color: #1f2133;
-  font-size: 18px;
-  font-weight: 600;
-  line-height: 1.35;
-  letter-spacing: -.015em;
+.plan-goal-prefix {
+  color: #6257e9;
+  font-weight: 650;
 }
 .plan-split {
   display: grid;
