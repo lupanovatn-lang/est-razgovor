@@ -120,7 +120,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number | null>(null);
   const [openPlanStep, setOpenPlanStep] = useState("");
-  const [moreReactions, setMoreReactions] = useState<Record<string, boolean>>({});
+  const [stepMore, setStepMore] = useState<Record<string, boolean>>({});
   const [reply, setReply] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [coachTip, setCoachTip] = useState("");
@@ -196,7 +196,7 @@ export default function Home() {
     setPlanWarning("");
     setPlanError("");
     setOpenPlanStep("");
-    setMoreReactions({});
+    setStepMore({});
     setMessages([]);
     setReply("");
     setCoachTip("");
@@ -279,9 +279,9 @@ export default function Home() {
       if (nextPlan.goal && isGenericGoalText(goalText)) {
         setGoalText(nextPlan.goal);
       }
-      setOpenPlanStep("");
+      setOpenPlanStep("01");
       setFormAttempted(false);
-      setMoreReactions({});
+      setStepMore({});
       setCopied(false);
       setMobileParamsOpen(false);
       if (activeId) {
@@ -346,7 +346,8 @@ export default function Home() {
     setPlan(item.plan);
     setPlanSource("openai");
     setPlanWarning("");
-    setOpenPlanStep("");
+    setOpenPlanStep("01");
+    setStepMore({});
     setMessages([]);
     setMobileParamsOpen(false);
     setView("plan");
@@ -777,6 +778,9 @@ export default function Home() {
               {resolvedGoal}
             </span>
           </div>
+          <p className="plan-howto">
+            Откройте шаг → посмотрите фразу → когда будете готовы, потренируйте разговор.
+          </p>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 
@@ -818,15 +822,15 @@ export default function Home() {
 
         <aside className="rehearse-invite">
           <div className="rehearse-invite-copy">
-            <h2>Потренируйте разговор</h2>
-            <p>Проиграйте первые фразы с ИИ до настоящего разговора.</p>
+            <h2>Потренировать</h2>
+            <p>Короткая репетиция первых фраз — чтобы не идти в разговор «в холодную».</p>
           </div>
           <button
             type="button"
             className="rehearse-button"
             onClick={startRehearsal}
           >
-            Начать репетицию
+            Начать
           </button>
         </aside>
       </section>
@@ -836,7 +840,6 @@ export default function Home() {
   function PlanItem({
     n,
     title,
-    preview,
     step: planStep,
   }: {
     n: string;
@@ -845,12 +848,26 @@ export default function Home() {
     step: PlanStep;
   }) {
     const open = openPlanStep === n;
+    const showMore = !!stepMore[n];
+    const say = stepPhrases(planStep);
+    const primaryPhrase = say[0];
+    const extraPhrases = say.slice(1);
+    const questions = planStep.questions ?? [];
+    const primaryQuestion = questions[0];
+    const extraQuestions = questions.slice(1);
     const reactionsList = planStep.reactions ?? [];
     const primaryReaction = reactionsList[0];
     const extraReactions = reactionsList.slice(1);
-    const showExtras = !!moreReactions[n];
-    const say = stepPhrases(planStep);
-    const questions = planStep.questions ?? [];
+
+    const hasMore =
+      extraPhrases.length > 0 ||
+      extraQuestions.length > 0 ||
+      !!planStep.note ||
+      !!planStep.mark ||
+      !!planStep.discuss ||
+      !!planStep.avoid ||
+      reactionsList.length > 0 ||
+      (questions.length > 1);
 
     const reactionTitle = (when?: string) =>
       when?.trim()
@@ -867,33 +884,22 @@ export default function Home() {
       return true;
     };
 
-    const renderReaction = (r: NonNullable<PlanStep["reactions"]>[number], key: string) => (
-      <div className="step-block" key={key}>
-        <div className="step-block-label">{reactionTitle(r.when)}</div>
-        {showChildLine(r.child) && <div className="step-chip muted">{r.child}</div>}
-        {r.parent?.trim() && (
-          <>
-            <div className="step-block-label nest">Можно ответить</div>
-            <div className="step-chip">{r.parent}</div>
-          </>
-        )}
-      </div>
-    );
-
     return (
       <article className={open ? "plan-step open" : "plan-step"}>
         <button
           className="plan-step-head"
           aria-expanded={open}
-          onClick={() => setOpenPlanStep(open ? "" : n)}
+          onClick={() => {
+            setOpenPlanStep(open ? "" : n);
+            if (open) setStepMore((prev) => ({ ...prev, [n]: false }));
+          }}
         >
           <span className="plan-number">{Number(n)}</span>
           <span className="plan-step-copy">
             <b>{title}</b>
-            {!open && <small>{preview}</small>}
           </span>
           <span className="plan-more">
-            {open ? "Свернуть" : "Подробнее"}
+            {open ? "Свернуть" : "Открыть"}
             <img className={open ? "caret open" : "caret"} src="/caret-ref.png" alt="" />
           </span>
         </button>
@@ -903,99 +909,125 @@ export default function Home() {
               <p className="step-instruction">{planStep.action}</p>
             )}
 
-            {planStep.note && (
-              <div className="step-block">
-                <div className="step-block-label">Обратите внимание</div>
-                <p className="step-block-text">{planStep.note}</p>
-              </div>
-            )}
-
-            {planStep.mark && (
-              <div className="step-block">
-                <div className="step-block-label">Важно обозначить</div>
-                <div className="step-chip">{planStep.mark}</div>
-              </div>
-            )}
-
-            {say.length > 0 && (
+            {primaryPhrase && (
               <div className="step-block">
                 <div className="step-block-label">Можно сказать</div>
-                <div className="step-chip-stack">
-                  {say.map((p) => (
-                    <div className="step-chip" key={p}>
-                      «{p}»
-                    </div>
-                  ))}
-                </div>
+                <div className="step-chip">«{primaryPhrase}»</div>
               </div>
             )}
 
-            {questions.length > 0 && (
+            {primaryQuestion && (
               <div className="step-block">
                 <div className="step-block-label">Можно спросить</div>
-                <div className="step-chip-stack">
-                  {questions.map((q) => (
-                    <div className="step-chip" key={q}>
-                      {q}
-                    </div>
-                  ))}
-                </div>
+                <div className="step-chip">{primaryQuestion}</div>
               </div>
             )}
 
-            {primaryReaction &&
-              renderReaction(primaryReaction, `${primaryReaction.child}-${primaryReaction.parent}`)}
-
-            {showExtras &&
-              extraReactions.map((r) =>
-                renderReaction(r, `${r.child}-${r.parent}`),
-              )}
-
-            {extraReactions.length > 0 && (
+            {hasMore && (
               <button
                 type="button"
                 className="scenario-more"
                 onClick={() =>
-                  setMoreReactions((prev) => ({ ...prev, [n]: !prev[n] }))
+                  setStepMore((prev) => ({ ...prev, [n]: !prev[n] }))
                 }
               >
-                {showExtras
-                  ? "Скрыть другие реакции"
-                  : `Другие возможные реакции · ${extraReactions.length}`}
+                {showMore ? "Скрыть подробности" : "Ещё подсказки"}
               </button>
             )}
 
-            {planStep.discuss && (
-              <div className="step-block">
-                <div className="step-block-label">Обсудите вместе</div>
-                <p className="step-block-text">{planStep.discuss}</p>
-              </div>
-            )}
+            {showMore && (
+              <>
+                {planStep.note && (
+                  <div className="step-block">
+                    <div className="step-block-label">Обратите внимание</div>
+                    <p className="step-block-text">{planStep.note}</p>
+                  </div>
+                )}
 
-            {planStep.avoid && (
-              <div className="avoid-line">
-                <span className="avoid-icon" aria-hidden="true">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <circle
-                      cx="7"
-                      cy="7"
-                      r="5.2"
-                      stroke="currentColor"
-                      strokeWidth="1.3"
-                    />
-                    <path
-                      d="M7 4.2v3.2"
-                      stroke="currentColor"
-                      strokeWidth="1.3"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="7" cy="9.6" r="0.7" fill="currentColor" />
-                  </svg>
-                </span>
-                <p>
-                  <b>Лучше избегать:</b> {planStep.avoid}
-                </p>
-              </div>
+                {planStep.mark && (
+                  <div className="step-block">
+                    <div className="step-block-label">Важно обозначить</div>
+                    <div className="step-chip">{planStep.mark}</div>
+                  </div>
+                )}
+
+                {extraPhrases.map((p) => (
+                  <div className="step-chip" key={p}>
+                    «{p}»
+                  </div>
+                ))}
+
+                {extraQuestions.map((q) => (
+                  <div className="step-chip" key={q}>
+                    {q}
+                  </div>
+                ))}
+
+                {primaryReaction && (
+                  <div className="step-block">
+                    <div className="step-block-label">
+                      {reactionTitle(primaryReaction.when)}
+                    </div>
+                    {showChildLine(primaryReaction.child) && (
+                      <div className="step-chip muted">{primaryReaction.child}</div>
+                    )}
+                    {primaryReaction.parent?.trim() && (
+                      <>
+                        <div className="step-block-label nest">Можно ответить</div>
+                        <div className="step-chip">{primaryReaction.parent}</div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {extraReactions.map((r) => (
+                  <div className="step-block" key={`${r.child}-${r.parent}`}>
+                    <div className="step-block-label">{reactionTitle(r.when)}</div>
+                    {showChildLine(r.child) && (
+                      <div className="step-chip muted">{r.child}</div>
+                    )}
+                    {r.parent?.trim() && (
+                      <>
+                        <div className="step-block-label nest">Можно ответить</div>
+                        <div className="step-chip">{r.parent}</div>
+                      </>
+                    )}
+                  </div>
+                ))}
+
+                {planStep.discuss && (
+                  <div className="step-block">
+                    <div className="step-block-label">Обсудите вместе</div>
+                    <p className="step-block-text">{planStep.discuss}</p>
+                  </div>
+                )}
+
+                {planStep.avoid && (
+                  <div className="avoid-line">
+                    <span className="avoid-icon" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <circle
+                          cx="7"
+                          cy="7"
+                          r="5.2"
+                          stroke="currentColor"
+                          strokeWidth="1.3"
+                        />
+                        <path
+                          d="M7 4.2v3.2"
+                          stroke="currentColor"
+                          strokeWidth="1.3"
+                          strokeLinecap="round"
+                        />
+                        <circle cx="7" cy="9.6" r="0.7" fill="currentColor" />
+                      </svg>
+                    </span>
+                    <p>
+                      <b>Лучше избегать:</b> {planStep.avoid}
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}

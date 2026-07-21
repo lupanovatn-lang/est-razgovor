@@ -564,6 +564,13 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-header { margin: 4px 0 28px; }
 .plan-header h1 { max-width: 760px; margin: 0; font-size: 30px; font-weight: 600; line-height: 1.18; letter-spacing: -.028em; color: #1f2133; }
 .plan-header p { margin: 0; color: #80849f; font-size: 12px; }
+.plan-howto {
+  margin: 14px 0 0;
+  max-width: 42ch;
+  color: #6d718a;
+  font-size: 13px;
+  line-height: 1.45;
+}
 .plan-back { padding: 0; border: 0; background: transparent; color: #6b63d9; font-size: 11px; cursor: pointer; }
 .plan-header .plan-actions { display: none; }
 .plan-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; }
