@@ -635,7 +635,7 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .rehearse-cta button { border: 0; border-radius: 9px; background: white; padding: 11px 15px; color: #554ad8; font-size: 11px; font-weight: 700; cursor: pointer; }
 
 /* Plan workspace */
-.plan-header { margin: 0 0 20px; }
+.plan-header { margin: 0 0 16px; }
 .plan-header h1 {
   margin: 0;
   max-width: 28ch;
@@ -647,14 +647,42 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   color: #1f2133;
 }
 .plan-header p { margin: 0; color: #80849f; font-size: 14px; }
-.plan-goal {
-  margin: 8px 0 0;
-  max-width: 40ch;
-  color: #5a5e76;
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 1.4;
-  letter-spacing: -.01em;
+.plan-goal-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 16px 18px;
+  border: 1px solid #e1e3ef;
+  border-radius: 18px;
+  background: rgba(255,255,255,.94);
+}
+.plan-goal-icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eef0ff;
+  color: #6257e9;
+}
+.plan-goal-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding-top: 2px;
+}
+.plan-goal-copy .plan-card-kicker {
+  display: block;
+}
+.plan-goal-text {
+  margin: 0;
+  color: #1f2133;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -.015em;
 }
 .plan-split {
   display: grid;

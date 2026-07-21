@@ -771,13 +771,26 @@ export default function Home() {
       >
         <header className="plan-header">
           <h1 id="plan-title">{plan.title}</h1>
-          {(goalKind || plan.goal) && (
-            <p className="plan-goal">
-              {goalKind ? goalLabel(goalKind) : plan.goal}
-            </p>
-          )}
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
+
+        {(resolvedGoal || goalKind) && (
+          <div className="plan-goal-card">
+            <span className="plan-goal-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="7.2" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="10" cy="10" r="4.2" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="10" cy="10" r="1.5" fill="currentColor" />
+              </svg>
+            </span>
+            <div className="plan-goal-copy">
+              <span className="plan-card-kicker">Цель</span>
+              <p className="plan-goal-text">
+                {resolvedGoal || (goalKind ? goalLabel(goalKind) : "")}
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="plan-split">
           <section className="plan-overview-card" aria-label="Общий план">
