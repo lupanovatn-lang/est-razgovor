@@ -1040,11 +1040,7 @@ export default function Home() {
             >
               Назад
             </button>
-            {isLast ? (
-              <span className="plan-nav-done" aria-hidden="true">
-                Готово
-              </span>
-            ) : (
+            {!isLast && (
               <button type="button" className="plan-nav-btn" onClick={onNext}>
                 Дальше
               </button>
