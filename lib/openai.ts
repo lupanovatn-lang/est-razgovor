@@ -4,6 +4,7 @@ import {
   goalLabel,
   isGenericGoalText,
   reactionWhenLabel,
+  actionAddsDetail,
 } from "./plans";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -145,7 +146,7 @@ export const PLAN_SYSTEM = `Ты помощник продукта «Есть р
 - discuss — «Обсудите вместе»: варианты, детали реализации, следующий шаг;
 - note — «Обратите внимание»: ориентир родителю;
 - avoid — «Лучше избегать»: нежелательные слова/ходы;
-- action — короткая подсказка «что сделать» (не канцелярия);
+- action — только если даёт конкретику сверх title (куда, когда, на чём сделать акцент). Не пересказывай title другими словами — тогда null;
 - why — зачем шаг.
 
 Логика по целям (разная последовательность, не копируй одну на все):
@@ -351,7 +352,7 @@ export function normalizePlan(
         outcome: s.outcome ? String(s.outcome).trim() : undefined,
       });
     })
-    .filter((s) => s.title && s.action);
+    .filter((s) => s.title);
 
   const rawTitle = String(raw.title || "План разговора").trim();
   const title = ctx
@@ -411,6 +412,7 @@ function repairStepDialogue(step: NormStep): NormStep {
   return {
     ...step,
     title,
+    action: actionAddsDetail(title, step.action) ? step.action : undefined,
     phrases,
     phrase: phrases?.[0],
     questions,

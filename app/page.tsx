@@ -6,6 +6,7 @@ import {
   goalLabel,
   goalOptions,
   isGenericGoalText,
+  actionAddsDetail,
   stepPhrases,
   type ConversationPlan,
   type GoalKind,
@@ -1065,10 +1066,9 @@ export default function Home() {
             </button>
           </div>
         </div>
-        <h2 className="plan-card-title">{planStep.title}</h2>
 
         <div className="plan-focus-body">
-          {planStep.action && (
+          {actionAddsDetail(planStep.title, planStep.action) && (
             <p className="step-instruction">{planStep.action}</p>
           )}
 

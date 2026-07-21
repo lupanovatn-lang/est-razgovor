@@ -67,6 +67,74 @@ export function stepPhrases(step: PlanStep): string[] {
   return one ? [one] : [];
 }
 
+/** True when action adds detail beyond the step title (not a paraphrase). */
+export function actionAddsDetail(title: string, action?: string): boolean {
+  const a = (action || "").trim();
+  if (!a) return false;
+  const normalize = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/[«»"'„“]/g, "")
+      .replace(/[.,!?;:—–-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  const tNorm = normalize(title);
+  const aNorm = normalize(a);
+  if (!aNorm || aNorm === tNorm) return false;
+  if (tNorm.includes(aNorm) || aNorm.includes(tNorm)) return false;
+
+  const stop = new Set([
+    "и",
+    "а",
+    "но",
+    "в",
+    "на",
+    "о",
+    "об",
+    "с",
+    "со",
+    "к",
+    "по",
+    "для",
+    "что",
+    "как",
+    "чтобы",
+    "это",
+    "то",
+    "же",
+    "ли",
+    "или",
+    "не",
+    "из",
+    "у",
+    "от",
+    "до",
+    "при",
+    "его",
+    "её",
+    "ее",
+    "их",
+    "ваш",
+    "ваше",
+    "ваши",
+    "ребёнок",
+    "ребенок",
+    "ребёнка",
+    "ребенка",
+    "ребёнку",
+    "ребенку",
+  ]);
+  const tokens = (s: string) =>
+    normalize(s)
+      .split(" ")
+      .filter((w) => w.length > 2 && !stop.has(w));
+  const titleSet = new Set(tokens(title));
+  const actionTokens = tokens(a);
+  if (actionTokens.length === 0) return false;
+  const overlap = actionTokens.filter((w) => titleSet.has(w)).length;
+  return overlap / actionTokens.length < 0.65;
+}
+
 /** Short «Если ребёнок …» label from the form's typical reaction. */
 export function reactionWhenLabel(reaction: string): string {
   const r = reaction.trim().toLowerCase();
