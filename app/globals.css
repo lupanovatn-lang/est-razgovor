@@ -813,16 +813,6 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 }
 .plan-nav-btn:hover:not(:disabled) { background: #f5f6fb; color: #3f435a; }
 .plan-nav-btn:disabled { opacity: .4; cursor: default; }
-.plan-nav-done {
-  display: inline-flex;
-  align-items: center;
-  padding: 9px 14px;
-  border-radius: 10px;
-  background: #eef7f2;
-  color: #2f7a62;
-  font-size: 14px;
-  font-weight: 650;
-}
 .plan-focus-body {
   display: flex;
   flex-direction: column;
