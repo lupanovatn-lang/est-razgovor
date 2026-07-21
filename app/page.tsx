@@ -375,12 +375,14 @@ export default function Home() {
       `Тема: ${topic}`,
       `Возраст: ${childName}`,
       "",
-      ...plan.steps.map(
-        (s, i) =>
-          `${i + 1}. ${s.title}\nЗачем: ${s.why}\nЧто сделать: ${s.action}${
-            stepPhrases(s)[0] ? `\nФраза: ${stepPhrases(s)[0]}` : ""
-          }`,
-      ),
+      ...plan.steps.map((s, i) => {
+        const parts = [`${i + 1}. ${s.title}`];
+        if (s.why?.trim()) parts.push(`Зачем: ${s.why.trim()}`);
+        if (s.action?.trim()) parts.push(`Что сделать: ${s.action.trim()}`);
+        const phrase = stepPhrases(s)[0]?.trim();
+        if (phrase) parts.push(`Фраза: ${phrase}`);
+        return parts.join("\n");
+      }),
     ];
     if (plan.nonNegotiable) lines.push("", `Что не обсуждается: ${plan.nonNegotiable}`);
     if (plan.discussable) lines.push(`Что можно решить вместе: ${plan.discussable}`);
