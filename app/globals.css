@@ -638,13 +638,16 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
 .plan-header { margin: 0 0 16px; }
 .plan-header h1 {
   margin: 0;
-  max-width: 28ch;
+  max-width: none;
   font-family: var(--font-sans);
   font-size: 28px;
   font-weight: 650;
   line-height: 1.22;
   letter-spacing: -.025em;
   color: #1f2133;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .plan-header p { margin: 0; color: #80849f; font-size: 14px; }
 .plan-goal-card {
