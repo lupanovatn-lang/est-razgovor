@@ -74,18 +74,6 @@ function DoneCheck() {
   );
 }
 
-function GoalIcon({ kind }: { kind: GoalKind }) {
-  // Always show a target for the conversation goal.
-  void kind;
-  return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <circle cx="10" cy="10" r="7.2" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="10" cy="10" r="4.2" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="10" cy="10" r="1.5" fill="currentColor" />
-    </svg>
-  );
-}
-
 function loadSaved(): SavedConversation[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -780,15 +768,10 @@ export default function Home() {
       >
         <header className="plan-header">
           <h1 id="plan-title">{plan.title}</h1>
-          <div className="plan-goal-chip">
-            <span className="plan-goal-chip-icon" aria-hidden="true">
-              <GoalIcon kind={goalKind || "other"} />
-            </span>
-            <span className="plan-goal-chip-text">
-              <span className="plan-goal-chip-label">Цель</span>
-              {goalKind ? goalLabel(goalKind) : "Цель разговора"}
-            </span>
-          </div>
+          <p className="plan-goal">
+            <span className="plan-goal-label">Цель</span>
+            {goalKind ? goalLabel(goalKind) : "Цель разговора"}
+          </p>
           {planWarning && <p className="plan-warning">{planWarning}</p>}
         </header>
 

@@ -344,7 +344,6 @@ button { color: inherit; }
   letter-spacing: .06em;
   text-transform: uppercase;
 }
-.plan-goal { display: none; }
 .plan-bottom-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 22px; }
 .text-action { border: 0; background: transparent; padding: 8px 4px; color: #6257e9; font-size: 14px; font-weight: 600; cursor: pointer; }
 .text-action:hover { color: #4e43da; }
@@ -632,42 +631,19 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   color: #1f2133;
 }
 .plan-header p { margin: 0; color: #80849f; font-size: 14px; }
-.plan-goal-chip {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 12px 0 0;
-  padding: 10px 14px 10px 10px;
-  border-radius: 14px;
-  background: #eef0ff;
-  color: #2f3248;
+.plan-goal {
+  margin: 8px 0 0;
+  max-width: 42ch;
+  color: #4a4e63;
   font-size: 16px;
-  font-weight: 600;
-  line-height: 1.35;
+  font-weight: 500;
+  line-height: 1.4;
   letter-spacing: -.01em;
-  max-width: min(42ch, 100%);
 }
-.plan-goal-chip-icon {
-  width: 28px;
-  height: 28px;
-  margin-top: 1px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #fff;
-  color: #6257e9;
-  flex: 0 0 auto;
-}
-.plan-goal-chip-icon svg { width: 14px; height: 14px; }
-.plan-goal-chip-text {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-  padding-top: 1px;
-}
-.plan-goal-chip-label {
+.plan-goal-label {
+  margin-right: 8px;
   color: #7a76c9;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
