@@ -1083,7 +1083,7 @@ footer p { margin: 0; }
   .topbar { padding: 0 20px; }
   main { padding: 24px 18px 40px; }
   .plan-layout { grid-template-columns: 1fr; }
-  .plan-split { grid-template-columns: 1fr; }
+  .plan-split { grid-template-columns: 1fr; min-height: 0; }
   .plan-detail .plan-focus-card { position: static; }
   .plan-cheatsheet { position: static; }
   .boundary-split { grid-template-columns: 1fr; }
