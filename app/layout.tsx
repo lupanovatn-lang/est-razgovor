@@ -15,8 +15,8 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Есть разговор — подготовка к сложному разговору с ребёнком",
-  description: "ИИ-помощник для подготовки к сложным разговорам с ребёнком.",
+  title: "План сложного разговора с ребёнком",
+  description: "ИИ-помощник: план и фразы для сложного разговора с ребёнком.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

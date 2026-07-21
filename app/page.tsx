@@ -1364,10 +1364,27 @@ export default function Home() {
     <div className={showSettings ? "app-shell" : "app-shell rehearsal-mode"}>
       <header className="app-header">
         <button type="button" className="brand" onClick={resetNew}>
-          <img src="/conversation-mark.png" alt="" />
+          <span className="brand-mark" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <rect
+                x="4"
+                y="5"
+                width="20"
+                height="18"
+                rx="5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+              />
+              <path
+                d="M9 11.5h10M9 16h6.5"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
           <span className="brand-copy">
-            <b>Есть разговор</b>
-            <small>Подготовка к сложному разговору с ребёнком</small>
+            <b>План сложного разговора с ребёнком</b>
           </span>
         </button>
         <div className="header-actions">
