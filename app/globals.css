@@ -823,22 +823,6 @@ textarea { width: 100%; padding: 14px 15px; resize: vertical; line-height: 1.5; 
   font-size: 14px;
   font-weight: 650;
 }
-.plan-finish {
-  margin-top: 6px;
-  padding-top: 16px;
-  border-top: 1px solid #e8eaf3;
-}
-.plan-finish-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #2f7a62;
-  font-size: 15px;
-  font-weight: 650;
-}
-.plan-finish-status svg {
-  flex: 0 0 auto;
-}
 .plan-focus-body {
   display: flex;
   flex-direction: column;
