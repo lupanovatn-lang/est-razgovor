@@ -28,7 +28,6 @@ body {
 button, input, textarea, select { font: inherit; letter-spacing: inherit; }
 button { color: inherit; }
 
-.brand-copy b,
 .saved-page-header h1 {
   font-family: var(--font-display);
   letter-spacing: -.02em;
