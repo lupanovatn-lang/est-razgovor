@@ -7,6 +7,8 @@ import {
   goalOptions,
   isGenericGoalText,
   actionAddsDetail,
+  afterTalkForGoal,
+  reactionChipLabel,
   stepPhrases,
   type ConversationPlan,
   type GoalKind,
@@ -29,7 +31,20 @@ type SavedConversation = {
   updatedAt: number;
 };
 
-const topics = ["Гаджеты и интернет", "Учёба", "Правила дома", "Друзья", "Деньги", "Другое"];
+const topics = [
+  "Учёба и школа",
+  "Гаджеты и интернет",
+  "Правила и обязанности",
+  "Поведение и конфликты",
+  "Друзья и отношения",
+  "Честность и доверие",
+  "Деньги и покупки",
+  "Взросление и личные границы",
+  "Безопасность и рискованное поведение",
+  "Переживания и сложные события",
+  "Изменения в семье",
+  "Другое",
+];
 const reactions = [
   "Замыкается и молчит",
   "Спорит и защищается",
@@ -377,11 +392,21 @@ export default function Home() {
         if (s.action?.trim()) parts.push(`Что сделать: ${s.action.trim()}`);
         const phrase = stepPhrases(s)[0]?.trim();
         if (phrase) parts.push(`Фраза: ${phrase}`);
+        if (i === plan.steps.length - 1 && s.closing?.trim()) {
+          parts.push(`Как завершить: ${s.closing.trim()}`);
+        }
         return parts.join("\n");
       }),
     ];
     if (plan.nonNegotiable) lines.push("", `Что не обсуждается: ${plan.nonNegotiable}`);
     if (plan.discussable) lines.push(`Что можно решить вместе: ${plan.discussable}`);
+    const after = afterTalkForGoal(goalKind);
+    if (after?.length) {
+      lines.push("", "После разговора — что делать");
+      for (const item of after) {
+        lines.push(`• ${item.title}. ${item.text}`);
+      }
+    }
     await navigator.clipboard?.writeText(lines.join("\n"));
     setCopied(true);
     if (copiedTimer.current != null) window.clearTimeout(copiedTimer.current);
@@ -748,6 +773,7 @@ export default function Home() {
     );
     const activeStep = steps[activeIndex];
     const activeN = String(activeIndex + 1).padStart(2, "0");
+    const afterTalk = afterTalkForGoal(goalKind);
 
     const goTo = (index: number) => {
       const next = Math.min(total - 1, Math.max(0, index));
@@ -837,6 +863,19 @@ export default function Home() {
           </div>
         </div>
 
+        {afterTalk && afterTalk.length > 0 && (
+          <aside className="after-talk" aria-label="После разговора">
+            <h2 className="after-talk-title">После разговора — что делать</h2>
+            <ul className="after-talk-list">
+              {afterTalk.map((item) => (
+                <li key={item.title}>
+                  <strong>{item.title}.</strong> {item.text}
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
+
         <div className="plan-bottom-actions">
           {!openedFromLibrary && (
             <button type="button" className="text-action" onClick={focusSettings}>
@@ -899,13 +938,6 @@ export default function Home() {
       render: () => ReactNode;
     };
 
-    const reactionTitle = (when?: string) =>
-      when?.trim()
-        ? /^если\s/i.test(when.trim())
-          ? when.trim()
-          : `Если ребёнок ${when.trim()}`
-        : "Если ребёнок…";
-
     const showChildLine = (text?: string) => {
       const t = (text || "").trim();
       if (!t) return false;
@@ -916,27 +948,28 @@ export default function Home() {
 
     const tipTabs: TipTab[] = [];
     if (reactionsList.length > 0 && reaction.trim()) {
-      tipTabs.push({
-        id: "reaction",
-        label: "Если ответит",
-        render: () => (
-          <>
-            {reactionsList.map((r) => (
-              <div className="step-block" key={`${r.when}-${r.child}-${r.parent}`}>
-                <div className="step-block-label">{reactionTitle(r.when)}</div>
-                {showChildLine(r.child) && (
-                  <div className="step-chip muted">{r.child}</div>
-                )}
-                {r.parent?.trim() && (
-                  <>
-                    <div className="step-block-label nest">Можно ответить</div>
-                    <div className="step-chip">{r.parent}</div>
-                  </>
-                )}
-              </div>
-            ))}
-          </>
-        ),
+      reactionsList.forEach((r, i) => {
+        const chipLabel = reactionChipLabel(
+          i === 0 ? reaction : r.when || reaction,
+        );
+        tipTabs.push({
+          id: `reaction-${i}`,
+          label: chipLabel,
+          render: () => (
+            <div className="step-block">
+              <div className="step-block-label">{chipLabel}</div>
+              {showChildLine(r.child) && (
+                <div className="step-chip muted">{r.child}</div>
+              )}
+              {r.parent?.trim() && (
+                <>
+                  <div className="step-block-label nest">Можно ответить</div>
+                  <div className="step-chip">{r.parent}</div>
+                </>
+              )}
+            </div>
+          ),
+        });
       });
     }
     if (planStep.mark) {
@@ -991,6 +1024,18 @@ export default function Home() {
                 {q}
               </div>
             ))}
+          </div>
+        ),
+      });
+    }
+    if (isLast && planStep.closing?.trim()) {
+      tipTabs.push({
+        id: "closing",
+        label: "Как завершить",
+        render: () => (
+          <div className="step-block">
+            <div className="step-block-label">Фраза для завершения</div>
+            <div className="step-chip">«{planStep.closing!.trim()}»</div>
           </div>
         ),
       });

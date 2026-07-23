@@ -345,6 +345,36 @@ button { color: inherit; }
   text-transform: uppercase;
 }
 .plan-bottom-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 22px; }
+.after-talk {
+  margin-top: 22px;
+  padding: 20px 22px;
+  border: 1px solid #e1e3ef;
+  border-radius: 18px;
+  background: rgba(255,255,255,.94);
+  max-width: 72ch;
+}
+.after-talk-title {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  color: #2c2f42;
+}
+.after-talk-list {
+  margin: 0;
+  padding: 0 0 0 1.15em;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #4a4e66;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.after-talk-list strong {
+  color: #2c2f42;
+  font-weight: 650;
+}
 .text-action {
   border: 1px solid #e0e2ef;
   border-radius: 10px;

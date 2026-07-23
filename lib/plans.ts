@@ -35,6 +35,8 @@ export type PlanStep = {
   note?: string;
   /** «Лучше избегать» */
   avoid?: string;
+  /** «Фраза для завершения» — на финальном шаге, под цель разговора */
+  closing?: string;
   /** Optional outcome of the step */
   outcome?: string;
 };
@@ -141,11 +143,114 @@ export function reactionWhenLabel(reaction: string): string {
   if (!r) return "";
   if (/молч|замкн/.test(r)) return "молчит";
   if (/спор|защищ/.test(r)) return "спорит";
-  if (/злит/.test(r)) return "злится";
+  if (/злит|рассер/.test(r)) return "злится";
   if (/обвиня/.test(r)) return "обвиняет";
-  if (/расстра/.test(r)) return "расстраивается";
-  if (/соглаша/.test(r)) return "соглашается, но не делает";
-  return reaction.trim().replace(/^если\s+ребёнок\s+/i, "");
+  if (/расстра|заплач|плач/.test(r)) return "расстраивается";
+  if (/соглаша|потом/.test(r)) return "соглашается, но не делает";
+  return reaction.trim().replace(/^если\s+(ребёнок\s+)?/i, "");
+}
+
+/**
+ * Chip label for tip tabs: «Если рассердится», «Если замолчит»…
+ * Prefers form reaction; falls back to step `when`.
+ */
+export function reactionChipLabel(reactionOrWhen: string): string {
+  const raw = reactionOrWhen.trim();
+  if (!raw) return "Если ребёнок…";
+  if (/^если\s/i.test(raw) && raw.length <= 42) return raw;
+
+  const r = raw.toLowerCase();
+  if (/молч|замкн/.test(r)) return "Если замолчит";
+  if (/спор|защищ/.test(r)) return "Если начнёт спорить";
+  if (/злит|рассер/.test(r)) return "Если рассердится";
+  if (/обвиня/.test(r)) return "Если начнёт обвинять в ответ";
+  if (/расстра|заплач|плач/.test(r)) return "Если заплачет";
+  if (/соглаша/.test(r)) return "Если согласится, но не сделает";
+  if (/потом|не сейчас|позже/.test(r)) return "Если скажет «давай потом»";
+
+  const short = reactionWhenLabel(raw) || raw.replace(/^если\s+(ребёнок\s+)?/i, "");
+  return /^если\s/i.test(short) ? short : `Если ${short}`;
+}
+
+/** Closing line for the last step — tone matches the conversation goal. */
+export function closingPhraseForGoal(kind: GoalKind): string {
+  switch (kind) {
+    case "agree":
+      return "Спасибо, что поговорили. Давай через неделю сядем и посмотрим, как идёт. Если что-то не сработает — пересмотрим план, без обвинений.";
+    case "boundary":
+      return "Спасибо, что выслушал(а). Правило остаётся. Через неделю коротко проверим, как тебе его соблюдать — и при необходимости уточним детали.";
+    case "announce":
+      return "Спасибо, что выслушал(а). Решение уже принято. Если появятся вопросы — приходи, разберём спокойно.";
+    case "support":
+      return "Спасибо, что рассказал(а). Я рядом. Можем вернуться к этому, когда тебе будет нужно — без давления.";
+    case "trust":
+      return "Спасибо, что поговорили честно. Давай через несколько дней коротко проверим, как нам легче говорить правду — без упрёков.";
+    case "understand":
+      return "Спасибо, что рассказал(а). Мне важно было услышать тебя. Если что-то ещё вспомнишь — скажи, я готов(а) слушать.";
+    default:
+      return "Спасибо, что поговорили. Давай чуть позже коротко вернёмся и посмотрим, как идёт — без обвинений.";
+  }
+}
+
+export type AfterTalkItem = {
+  title: string;
+  text: string;
+};
+
+/**
+ * Post-conversation tips — only when the goal leaves something to follow up
+ * (agreement, boundary, trust repair). Not for pure understand/support.
+ */
+export function afterTalkForGoal(kind: GoalKind): AfterTalkItem[] | null {
+  switch (kind) {
+    case "agree":
+      return [
+        {
+          title: "Закрепить договорённости",
+          text: "Сразу после разговора напишите короткое сообщение: «Мы договорились: 1) …, 2) попробуем так, 3) сверим через неделю. Если что-то поменяется — скажи».",
+        },
+        {
+          title: "Восстановить эмоциональный баланс",
+          text: "После тяжёлого разговора дайте себе 15–20 минут тишины или прогулки. Ребёнку тоже дайте пространство: не проверяйте и не «добивайте» тему в тот же вечер.",
+        },
+        {
+          title: "Если результат не тот, что хотели",
+          text: "Это нормально. Запишите: что сработало, что нет. На следующей встрече начните с малого: «В прошлый раз не получилось — давай попробуем один крошечный шаг».",
+        },
+      ];
+    case "boundary":
+      return [
+        {
+          title: "Закрепить правило",
+          text: "Коротко зафиксируйте для себя: какое правило остаётся и какие детали ещё можно уточнить. Если удобно — одно спокойное сообщение ребёнку с сутью, без нотации.",
+        },
+        {
+          title: "Восстановить эмоциональный баланс",
+          text: "После разговора о границе дайте себе и ребёнку 15–20 минут тишины. Не спорьте снова в тот же вечер — вернитесь к деталям, когда остынете.",
+        },
+        {
+          title: "Если правило сразу «ломается»",
+          text: "Не отменяйте границу в эмоции. Запишите, что мешает соблюдать, и на спокойном разговоре уточните один рабочий шаг — без «я же говорила».",
+        },
+      ];
+    case "trust":
+      return [
+        {
+          title: "Закрепить договорённость о честности",
+          text: "Если договорились, как говорить правду дальше, коротко напомните себе и при желании ребёнку: что именно пробуете и когда мягко проверите.",
+        },
+        {
+          title: "Восстановить эмоциональный баланс",
+          text: "После разговора о доверии обоим нужна пауза. Не устраивайте «вторую серию» в тот же день — дайте контакту отлежаться.",
+        },
+        {
+          title: "Если снова соврали или закрылись",
+          text: "Это бывает на пути к доверию. Отметьте, что сработало в прошлом разговоре, и начните со следующего крошечного шага — без «ты опять».",
+        },
+      ];
+    default:
+      return null;
+  }
 }
 
 export const goalLabel = (kind: GoalKind) =>
@@ -753,6 +858,11 @@ export function buildPlan(kind: GoalKind, ctx: BuildCtx): ConversationPlan {
   return {
     ...plan,
     goal: deriveSituationGoal(ctx.situation, kind, ctx.goalText),
+    steps: plan.steps.map((step, i, arr) =>
+      i === arr.length - 1
+        ? { ...step, closing: step.closing?.trim() || closingPhraseForGoal(kind) }
+        : { ...step, closing: undefined },
+    ),
   };
 }
 
@@ -782,7 +892,7 @@ export const scenarios: ScenarioPreset[] = [
   {
     id: "grade-lie",
     historyLabel: "Скрытая оценка",
-    topic: "Учёба",
+    topic: "Учёба и школа",
     situation:
       "Ребёнок получил двойку, но сказал маме, что получил тройку.",
     goalKind: "understand",
