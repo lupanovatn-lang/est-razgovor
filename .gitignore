@@ -42,3 +42,8 @@ next-env.d.ts
 /work/
 tsconfig.tsbuildinfo
 .local-qa
+
+# local QA / audit dumps (do not commit)
+/audit-parent-plan/
+/qa-fixes/
+/product-notes/methodology.md
