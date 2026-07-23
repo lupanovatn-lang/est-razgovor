@@ -7,7 +7,6 @@ import {
   goalOptions,
   isGenericGoalText,
   actionAddsDetail,
-  afterTalkForGoal,
   reactionChipLabel,
   stepPhrases,
   type ConversationPlan,
@@ -400,13 +399,6 @@ export default function Home() {
     ];
     if (plan.nonNegotiable) lines.push("", `Что не обсуждается: ${plan.nonNegotiable}`);
     if (plan.discussable) lines.push(`Что можно решить вместе: ${plan.discussable}`);
-    const after = afterTalkForGoal(goalKind);
-    if (after?.length) {
-      lines.push("", "После разговора — что делать");
-      for (const item of after) {
-        lines.push(`• ${item.title}. ${item.text}`);
-      }
-    }
     await navigator.clipboard?.writeText(lines.join("\n"));
     setCopied(true);
     if (copiedTimer.current != null) window.clearTimeout(copiedTimer.current);
@@ -773,7 +765,6 @@ export default function Home() {
     );
     const activeStep = steps[activeIndex];
     const activeN = String(activeIndex + 1).padStart(2, "0");
-    const afterTalk = afterTalkForGoal(goalKind);
 
     const goTo = (index: number) => {
       const next = Math.min(total - 1, Math.max(0, index));
@@ -862,19 +853,6 @@ export default function Home() {
             )}
           </div>
         </div>
-
-        {afterTalk && afterTalk.length > 0 && (
-          <aside className="after-talk" aria-label="После разговора">
-            <h2 className="after-talk-title">После разговора — что делать</h2>
-            <ul className="after-talk-list">
-              {afterTalk.map((item) => (
-                <li key={item.title}>
-                  <strong>{item.title}.</strong> {item.text}
-                </li>
-              ))}
-            </ul>
-          </aside>
-        )}
 
         <div className="plan-bottom-actions">
           {!openedFromLibrary && (
